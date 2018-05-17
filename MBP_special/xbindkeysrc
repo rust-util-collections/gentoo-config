@@ -1,0 +1,19 @@
+# 提升音量
+"amixer set Master playback 1+ unmute"
+   XF86AudioRaiseVolume
+
+# 降低音量
+"amixer set Master playback 1-"
+   XF86AudioLowerVolume
+
+# 静音
+"amixer set Master toggle"
+   XF86AudioMute
+
+# 降低屏幕亮度
+"/usr/local/bin/blctl down"
+  m:0x0 + c:232
+
+# 提升屏幕亮度
+"/usr/local/bin/blctl up"
+  m:0x0 + c:233
