@@ -1,7 +1,7 @@
 ## Gentoo
 [Welcome to Gentoo, a highly flexible, source-based Linux distribution.](https://gentoo.org/)
 
-## 示例安装：MacBook 2015early 15ins'
+## 示例安装：MacBook Pro 15ins' 2015early 
 0. 在 Mac OS X 系统里，把声音调到0，以避免换装之后无法禁止的开机声音
 1. 分区、chroot
 ```
@@ -19,8 +19,8 @@ chroot . /bin/bash
 2. 为 root 设置密码
 3. 基本环境配置
 ```
-cp gentoo_config/MacBook/make.conf /etc/portage/make.conf
-cp gentoo_config/MacBook/fstab /etc/fstab
+cp gentoo_config/MacBook_special/make.conf /etc/portage/make.conf
+cp gentoo_config/MacBook_special/fstab /etc/fstab
 ```
 4. 更新基本系统
 ```
