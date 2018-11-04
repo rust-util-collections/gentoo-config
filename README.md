@@ -49,6 +49,9 @@ cp gentoo_config/xinitrc ~/.xinitrc
 emerge -avq xbindkeys
 cp gentoo_config/blctl.sh /usr/local/bin/
 cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
+
+cp gentoo_config/{blctl_chmod.sh,blctl_chmod.service} /root/
+ln -sv /root/blctl_chmod.service /etc/systemd//etc/systemd/system/multi-user.target.wants/
 ```
 9. 配置 **xterm**，不使用 xfce4-terminal
 ```

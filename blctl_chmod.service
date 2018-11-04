@@ -1,0 +1,9 @@
+[Unit]
+Description=
+After=
+
+[Service]
+ExecStart=/root/blctl_chmod.sh
+
+[Install]
+WantedBy=multi-user.target
