@@ -47,7 +47,7 @@ cp gentoo_config/xinitrc ~/.xinitrc
 8. 配置快捷键
 ```
 emerge -avq xbindkeys
-cp gentoo_config/xbindkeysrc ~/.xbindkeysrc 
+cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
 
 ```
 9. 配置 xterm
