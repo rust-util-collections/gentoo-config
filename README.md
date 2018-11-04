@@ -47,19 +47,18 @@ cp gentoo_config/xinitrc ~/.xinitrc
 8. 配置快捷键
 ```
 emerge -avq xbindkeys
+cp gentoo_config/blctl.sh /usr/local/bin/
 cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
-
 ```
 9. 配置 xterm
 ```
 emerge -avq xterm
 cp gentoo_config/Xdefaults ~/.xdefaults
-
+```
 10. 连接 wifi
 ```
 nmcli device wifi list
 nmcli device wifi connect SSID password PASSWORD
-```
 ```
 11. 设置 alsa 默认声卡
 ```
@@ -68,7 +67,6 @@ aplay -l
 echo "defaults.pcm.card 1
 defaults.pcm.device 1
 defaults.ctl.card 1" >> /etc/asound.conf
-
 ```
 12. 散热配置，温度控制
 ```
@@ -76,5 +74,4 @@ emerge -avq lm_sensors mbpfan
 sensors-detect
 systemctl enable --now lm_sensors
 systemctl enable --now mbpfan
-
 ```
