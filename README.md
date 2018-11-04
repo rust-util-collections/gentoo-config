@@ -82,4 +82,8 @@ emerge -avq vim zsh google-chrome go dev-vcs/git
 chsh -s /bin/zsh $USENAME
 
 curl https://sh.rustup.rs -sSf | sh
+# C/C++/go 开发：vim，配合 YouCompleteMe
+# rust 开发：IntelliJ IDEA，安装插件 rust
+# latex 开发：vscode，安装插件 latex workshop
+
 ```
