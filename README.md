@@ -54,13 +54,13 @@ cp gentoo_config/{blctl_chmod.sh,blctl_chmod.service} /root/
 ln -sv /root/blctl_chmod.service /etc/systemd/system/multi-user.target.wants/
 systemctl start blctl_chmod.service
 ```
-9. 连接 wifi
+9. 连接 wifi    
+若需连接 802.1X 企业网络，参考这篇文章    
+[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
 ```
 nmcli device wifi list
 nmcli device wifi connect SSID password PASSWORD
 ```
-若需连接 802.1X 企业网络，参考这篇文章    
-[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
 10. 散热配置，温度控制
 ```
 emerge -avq lm_sensors mbpfan
