@@ -30,6 +30,7 @@ emerge -avquDN --with-bdeps=y @world && emerge -c
 ```
 5. 安装 gentoo-sources，配置、编译内核
 ```
+cp gentoo_config/MacBook_special/config /usr/src/linux/.config
 cd /usr/src/linux
 make -j9 && make modules_install
 cp -L arch/x86_64/boot/bzImage /boot/efi/bootx64.efi
@@ -49,7 +50,7 @@ cp gentoo_config/xinitrc ~/.xinitrc
 [https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
 ```
 nmcli device wifi list
-nmcli device wifi connect SSID password PASSWORD
+nmcli device wifi connect $SSID password $PASSWORD
 ```
 9. 散热配置，温度控制
 ```
