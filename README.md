@@ -41,7 +41,7 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 7. 最小化安装 xfce 桌面    
 ```
 emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
-			gtk-engines-xfce freedesktop-icon-theme dejavu
+			xfce4-terminal gtk-engines-xfce freedesktop-icon-theme dejavu
 cp gentoo_config/xinitrc ~/.xinitrc
 ```
 8. 配置快捷键
@@ -54,34 +54,21 @@ cp gentoo_config/{blctl_chmod.sh,blctl_chmod.service} /root/
 ln -sv /root/blctl_chmod.service /etc/systemd/system/multi-user.target.wants/
 systemctl start blctl_chmod.service
 ```
-9. 配置 **xterm**，不使用 xfce4-terminal
-```
-emerge -avq xterm
-cp gentoo_config/Xdefaults ~/.xdefaults
-```
-10. 连接 wifi
+9. 连接 wifi
 ```
 nmcli device wifi list
 nmcli device wifi connect SSID password PASSWORD
 ```
 若需连接 802.1X 企业网络，参考这篇文章    
 [https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
-11. 设置 alsa 默认声卡
-```
-aplay -l # 查看本机声卡信息
-
-echo "defaults.pcm.card 1
-defaults.pcm.device 1
-defaults.ctl.card 1" >> /etc/asound.conf
-```
-12. 散热配置，温度控制
+10. 散热配置，温度控制
 ```
 emerge -avq lm_sensors mbpfan
 sensors-detect
 systemctl enable --now lm_sensors
 systemctl enable --now mbpfan
 ```
-13. 搭建开发环境
+11. 搭建开发环境
 ```
 echo "app-editors/vim -X python" >> /etc/portage/package.use/vim
 emerge -avq vim zsh google-chrome go dev-vcs/git
@@ -92,4 +79,12 @@ curl https://sh.rustup.rs -sSf | sh
 # rust 开发：IntelliJ IDEA，安装插件 rust
 # latex 开发：vscode，安装插件 latex workshop
 
+```
+12. 设置 alsa 默认声卡
+```
+aplay -l # 查看本机声卡信息
+
+echo "defaults.pcm.card 1
+defaults.pcm.device 1
+defaults.ctl.card 1" >> /etc/asound.conf
 ```
