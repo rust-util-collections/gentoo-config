@@ -55,4 +55,18 @@ cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
 emerge -avq xterm
 cp gentoo_config/Xdefaults ~/.xdefaults
 ```
-10. reboot
+10. 设置 alsa 默认声卡
+```
+aplay -l
+
+echo "defaults.pcm.card 1
+defaults.pcm.device 1
+defaults.ctl.card 1" >> /etc/asound.conf
+
+```
+
+11. 连接 wifi
+```
+nmcli device wifi list
+nmcli device wifi connect SSID password PASSWORD
+```
