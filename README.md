@@ -1,7 +1,19 @@
 # gentoo_config
 
 #### 安装系统
-> 安装基本系统
+0. 分区、chroot
+```
+mkfs.vfat -F 32 /dev/sda1
+mkfs.ext4 /dev/sda2
+
+mount /dev/sda2 /mnt
+cd /mnt
+
+mount -t proc /proc proc/
+mount --rbind /sys sys/
+mount --rbind /dev dev/
+chroot . /bin/bash
+```
 1. 为 root 设置密码
 2. 配置 /etc/portage/make.conf、/etc/fstab
 3. 更新基本系统
@@ -20,8 +32,23 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 6. 最小化安装 xfce 桌面    
 ```
-emerge -avq xorg-server xterm xfwm4 xfdesktop xfce4-session xfce4-settings gtk-engines-xfce freedesktop-icon-theme dejavu
+emerge -avq xorg-server\
+			xfwm4 xfdesktop xfce4-session xfce4-settings\
+			gtk-engines-xfce freedesktop-icon-theme dejavu
+cd gentoo_config/
+cp xinitrc ~/.xinitrc
 ```
-7 配置快捷键
+7. 配置快捷键
+```
+emerge -avq xbindkeys
+cd gentoo_config/
+cp xbindkeysrc ~/.xbindkeysrc 
 
-8 配置 xterm
+```
+8. 配置 xterm
+```
+emerge -avq xterm
+cd gentoo_config/
+cp Xdefaults ~/.xdefaults
+```
+9. reboot
