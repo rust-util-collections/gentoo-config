@@ -1,4 +1,5 @@
-# gentoo_config
+## Gentoo
+[Welcome to Gentoo, a highly flexible, source-based Linux distribution.](https://gentoo.org/)
 
 ## 示例安装：MacBook 2015early 15ins'
 0. 在 Mac OS X 系统里，把声音调到0，以避免换装之后无法禁止的开机声音
