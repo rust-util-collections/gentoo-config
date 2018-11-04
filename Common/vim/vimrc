@@ -1,0 +1,168 @@
+"===================通用配置======================
+set encoding=utf-8
+
+set statusline=%F%=[Line:%l/%L,Column:%c] "显示文件名、行数
+"set statusline=[%F]%r%m%*%=[Line:%l/%L,Column:%c][%p%%] "显示文件名：总行数，总的字符数
+set ruler "在编辑过程中，在右下角显示光标位置的状态行
+
+" 控制
+set nocompatible              "关闭vi兼容
+filetype off                  "关闭文件类型侦测,vundle需要
+set fileencodings=utf-8       "使用utf-8
+syntax on                     "语法高亮
+set backspace=2               "退格键正常模式
+"set whichwrap=<,>,[,]         "当光标到行首或行尾，允许左右方向键换行
+set autoread                  "文件在vim外修改过，自动重载      
+set nobackup                  "不使用备份
+set confirm                   "在处理未保存或只读文件时，弹出确认消息   
+set scrolloff=3               "光标移动到距离顶部或底部开始滚到距离
+set history=1000              "历史记录数
+set mouse=                    "关闭鼠标
+set selection=inclusive       "选择包含最后一个字符
+set selectmode=mouse,key      "启动选择模式的方式
+"set completeopt=longest,menu  "智能补全,弹出菜单，无歧义时才自动填充
+set noswapfile                "关闭交换文件
+set hidden                    "允许在有未保存的修改时切换缓冲区
+
+"显示
+colorscheme desert           "选择配色方案
+set t_Co=256                  "可以使用的颜色数目
+set number                    "显示行号
+set laststatus=2              "显示状态行
+set ruler                     "显示标尺
+set showcmd                   "显示输入的命令
+set showmatch                 "高亮括号匹配
+set matchtime=1               "匹配括号高亮的时间(十分之一秒)
+set matchpairs={:},(:),[:],<:>        "匹配括号"{}""()"...等    
+set hlsearch                  "检索时高亮匹配项
+set incsearch                 "边检索边显示匹配
+"set go-=T                     "去除gvim的toolbar
+
+"格式
+set noexpandtab               "不要将tab转换为空格
+set shiftwidth=4              "自动缩进的距离,也是平移字符的距离
+set tabstop=4                 "tab键对应的空格数
+set autoindent                "自动缩进
+set smartindent               "智能缩进
+
+"===================按键映射======================
+
+"按键映射的起始字符
+let mapleader = '\'             
+
+"使用Ctrl-l 和 Ctrl+h 切换标签页
+nnoremap <C-l> gt            
+nnoremap <C-h> gT
+"open and close tab
+nnoremap <C-n> :tabnew<CR>
+nnoremap <C-k> :tabc<CR>
+
+"在行末加上分号
+"map! <F9> <Esc>A<Space>;<CR>
+
+"===================插件管理======================
+
+" 下载pathogen
+" git clone https://github.com/kt10/vim-pathogen.git /tmp/abcdef && mv /tmp/abcdef/autoload ~/.vim/
+
+" 自动配对括号
+" git clone git://github.com/jiangmiao/auto-pairs.git ~/.vim/bundle/auto-pairs
+
+" 目录管理器
+" git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
+
+"tagbar 插件
+" git clone https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
+
+"gotags：显示 go 的tagbar
+"go get -u github.com/jstemmer/gotags
+"go install
+
+" 下载 YCM 及其附属模块源码
+"git clone https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe
+"git submodule update --init --recursive
+
+" 编译安装全功能 YCM （需要首先安装最新版本的 clang 库：libclang.so）；也可以使用自带的脚本安装，如仅安装 go 的语义补全：./install.py  --gocode-completer
+"step0: cd $BuildDir \
+"step1: cmake -G "Unix Makefiles" -DPATH_TO_LLVM_ROOT=/PATH/TO/LLVM_Root_Dir . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp \
+"step2: make
+
+" YCM 常用命令
+"    :YcmRestartServer　　重启 YCM 服务器
+"    :YcmCompleter　　显示可用的子命令
+"    :YcmCompleter GetParent　　显示父函数、父类等
+"    :YcmCompleter GetType　　显示类型、参数等信息
+"    :YcmCompleter GetDoc　　跳转至相关文档（若有）
+"    :YcmCompleter GoToDeclaration　　跳转至声明处
+"    :YcmCompleter GoToDefinition　　跳转至定义处
+"    :YcmCompleter GoToInclude　　跳转至头文件处
+
+filetype plugin indent on    " required
+
+"===================插件配置======================
+
+"-----pathogen-----
+execute pathogen#infect() 
+
+"-----NERDTree-----
+let g:NERDTreeCaseSensitiveSort = 1
+let g:NERDTreeWinSize = 32
+let g:NERDTreeWinPos = "left"
+nnoremap <F5> :NERDTreeToggle<CR> 
+"nnoremap <Leader>o :NERDTreeFind<CR>
+
+let g:tagbar_type_go = { 
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [ 
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : { 
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : { 
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n' 
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+\ } 
+
+"-----tagbar-------
+let g:tagbar_width=32
+"let g:tagbar_autofocus=1
+nnoremap <F6> :TagbarToggle<CR>
+
+"-----YouCompleteMe-----
+let g:ycm_server_python_interpreter= '/usr/bin/python'
+let g:ycm_python_binary_path = '/usr/bin/python'
+let g:ycm_global_ycm_extra_conf = '~/.ycm_extra_conf.py' "默认配置文件
+"let g:ycm_key_invoke_completion = '<C-Tab>'         "跨文件补全
+let g:ycm_confirm_extra_conf = 0                    "关闭加载配置文件提示
+let g:ycm_cache_omnifunc = 0                        "关闭补全缓存
+let g:ycm_enable_diagnostic_signs = 0               "关闭诊断提示符
+let g:ycm_enable_diagnostic_highlighting = 1        "关闭诊断高亮
+"let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
+let g:ycm_min_num_of_chars_for_completion = 2       "n字符开始自动补全
+
+"跳转至定义或声明处
+nnoremap <Leader>d :YcmCompleter GoToDefinitionElseDeclaration<CR>
+"获取变量/函数类型
+nnoremap <Leader>t :YcmCompleter GetType<CR>
+
+"极简风格的 ~/.ycm_extra_conf.py 文件，此处仅作助记用，以下内容不应解除注释
+"def FlagsForFile( filename, **kwargs ):
+"   return {
+"     'flags': [ '-x', 'c', '-Wall', '-Wextra', '-Werror', '-std=c11', '-isystem', '/usr/include', '-I../inc' ],
+"   }

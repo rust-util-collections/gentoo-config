@@ -1,0 +1,10 @@
+#tmpfs
+tmpfs		/tmp		tmpfs	defaults,noatime,mode=1777	0 0
+tmpfs		/var/tmp	tmpfs	defaults,noatime,mode=1777	0 0
+
+#btrfs subvolumes
+#UUID=c610b841-ad9d-4392-a40d-8c6978aaaf9f	/btrfs		btrfs	subvolid=5,defaults,noatime	0 0
+#UUID=c610b841-ad9d-4392-a40d-8c6978aaaf9f	/home		btrfs	subvolid=257,defaults,noatime	0 0
+#UUID=c610b841-ad9d-4392-a40d-8c6978aaaf9f	/usr/portage	btrfs	subvolid=259,defaults,noatime	0 0
+#UUID=c610b841-ad9d-4392-a40d-8c6978aaaf9f	/usr/src	btrfs	subvolid=260,defaults,noatime	0 0
+#UUID=c610b841-ad9d-4392-a40d-8c6978aaaf9f	/var/lib	btrfs	subvolid=265,defaults,noatime	0 0
