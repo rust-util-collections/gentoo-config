@@ -59,8 +59,9 @@ cp gentoo_config/Xdefaults ~/.xdefaults
 ```
 nmcli device wifi list
 nmcli device wifi connect SSID password PASSWORD
-若需连接 802.1X 企业网络，参考这篇文章[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)
 ```
+若需连接 802.1X 企业网络，参考这篇文章    
+[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)
 11. 设置 alsa 默认声卡
 ```
 aplay -l # 查看本机声卡信息
