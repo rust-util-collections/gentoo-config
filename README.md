@@ -75,3 +75,11 @@ sensors-detect
 systemctl enable --now lm_sensors
 systemctl enable --now mbpfan
 ```
+13. 搭建开发环境
+```
+echo "app-editors/vim -X python" >> /etc/portage/package.use/vim
+emerge -avq vim zsh google-chrome go dev-vcs/git
+chsh -s /bin/zsh $USENAME
+
+curl https://sh.rustup.rs -sSf | sh
+```
