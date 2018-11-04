@@ -44,31 +44,21 @@ emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
 			xfce4-terminal gtk-engines-xfce freedesktop-icon-theme dejavu
 cp gentoo_config/xinitrc ~/.xinitrc
 ```
-8. 配置快捷键
-```
-emerge -avq xbindkeys
-cp gentoo_config/blctl.sh /usr/local/bin/
-cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
-
-cp gentoo_config/{blctl_chmod.sh,blctl_chmod.service} /root/
-ln -sv /root/blctl_chmod.service /etc/systemd/system/multi-user.target.wants/
-systemctl start blctl_chmod.service
-```
-9. 连接 wifi    
+8. 连接 wifi    
 若需连接 802.1X 企业网络，参考这篇文章    
 [https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
 ```
 nmcli device wifi list
 nmcli device wifi connect SSID password PASSWORD
 ```
-10. 散热配置，温度控制
+9. 散热配置，温度控制
 ```
 emerge -avq lm_sensors mbpfan
 sensors-detect
 systemctl enable --now lm_sensors
 systemctl enable --now mbpfan
 ```
-11. 搭建开发环境
+10. 搭建开发环境
 ```
 echo "app-editors/vim -X python" >> /etc/portage/package.use/vim
 emerge -avq vim zsh google-chrome go dev-vcs/git
@@ -79,6 +69,29 @@ curl https://sh.rustup.rs -sSf | sh
 # rust 开发：IntelliJ IDEA，安装插件 rust
 # latex 开发：vscode，安装插件 latex workshop
 
+```
+11. 配置快捷键
+```
+git clone https://github.com/kt10/blctl.git /tmp/
+cd /tmp/blctl/
+
+cargo build --release
+mv target/release/blctl /root/
+chmod +x /root/blctl
+
+go build src/blcli
+mv blcli /usr/local/bin/
+chmod +x /usr/local/bin/blcli
+
+cp gentoo_config/blctl.service /root/
+ln -sv /root/blctl.service /etc/systemd/system/multi-user.target.wants/
+systemctl daemon-reload
+systemctl start blctl.service
+
+emerge -avq xbindkeys
+cp gentoo_config/blctl.sh /usr/local/bin/
+cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
+xbindkeys
 ```
 12. 设置 alsa 默认声卡
 ```

@@ -1,8 +1,8 @@
 [Unit]
-After=
+After=network.target
 
 [Service]
-ExecStart=/root/blctl_chmod.sh
+ExecStart=/root/blctl
 
 [Install]
 WantedBy=multi-user.target
