@@ -1,7 +1,8 @@
 # gentoo_config
 
-#### 安装系统
-0. 分区、chroot
+## 示例安装：MacBook 2015early 15ins'
+0. 在 Mac OS X 系统里，把声音调到0，以避免换装之后无法禁止的开机声音
+1. 分区、chroot
 ```
 mkfs.vfat -F 32 /dev/sda1
 mkfs.ext4 /dev/sda2
@@ -14,41 +15,42 @@ mount --rbind /sys sys/
 mount --rbind /dev dev/
 chroot . /bin/bash
 ```
-1. 为 root 设置密码
-2. 配置 /etc/portage/make.conf、/etc/fstab
-3. 更新基本系统
+2. 为 root 设置密码
+3. 基本环境配置
+```
+cp gentoo_config/MacBook/make.conf /etc/portage/make.conf
+cp gentoo_config/MacBook/fstab /etc/fstab
+```
+4. 更新基本系统
 ```
 emerge-webrsync
 eselect profile set default/linux/amd64/17.0/desktop (stable)
 emerge -avquDN --with-bdeps=y @world && emerge -c
 ```
-4. 安装 gentoo-sources，配置、编译内核
+5. 安装 gentoo-sources，配置、编译内核
 ```
 cd /usr/src/linux
 cp -L arch/x86_64/boot/bzImage /boot/efi/bootx64.efi
 ```
-5. 安装 efibootmgr，添加 EFI 启动项   
+6. 安装 efibootmgr，添加 EFI 启动项   
 ```
 efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
-6. 最小化安装 xfce 桌面    
+7. 最小化安装 xfce 桌面    
 ```
 emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
 			gtk-engines-xfce freedesktop-icon-theme dejavu
-cd gentoo_config/
-cp xinitrc ~/.xinitrc
+cp gentoo_config/xinitrc ~/.xinitrc
 ```
-7. 配置快捷键
+8. 配置快捷键
 ```
 emerge -avq xbindkeys
-cd gentoo_config/
-cp xbindkeysrc ~/.xbindkeysrc 
+cp gentoo_config/xbindkeysrc ~/.xbindkeysrc 
 
 ```
-8. 配置 xterm
+9. 配置 xterm
 ```
 emerge -avq xterm
-cd gentoo_config/
-cp Xdefaults ~/.xdefaults
+cp gentoo_config/Xdefaults ~/.xdefaults
 ```
-9. reboot
+10. reboot
