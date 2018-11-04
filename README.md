@@ -2,7 +2,7 @@
 [Welcome to Gentoo, a highly flexible, source-based Linux distribution.](https://gentoo.org/)
 
 ## 示例安装：MacBook Pro 15ins' 2015early 
-0. 在 Mac OS X 系统里，把声音调到0，以避免换装之后无法禁止的开机声音
+0. 在 Mac OS X 系统里，把声音调到0，以避免换装 Linux 之后无法调节开机声响的问题
 1. 分区、chroot
 ```
 mkfs.vfat -F 32 /dev/sda1
@@ -16,7 +16,7 @@ mount --rbind /sys sys/
 mount --rbind /dev dev/
 chroot . /bin/bash
 ```
-2. 为 root 设置密码
+2. **为 root 设置密码**
 3. 基本环境配置
 ```
 cp gentoo_config/MacBook_special/make.conf /etc/portage/make.conf
@@ -50,7 +50,7 @@ emerge -avq xbindkeys
 cp gentoo_config/blctl.sh /usr/local/bin/
 cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
 ```
-9. 配置 xterm
+9. 配置 **xterm**，不使用 xfce4-terminal
 ```
 emerge -avq xterm
 cp gentoo_config/Xdefaults ~/.xdefaults
@@ -62,7 +62,7 @@ nmcli device wifi connect SSID password PASSWORD
 ```
 11. 设置 alsa 默认声卡
 ```
-aplay -l
+aplay -l # 查看本机声卡信息
 
 echo "defaults.pcm.card 1
 defaults.pcm.device 1
