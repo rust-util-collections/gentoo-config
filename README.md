@@ -54,8 +54,14 @@ cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
 ```
 emerge -avq xterm
 cp gentoo_config/Xdefaults ~/.xdefaults
+
+10. 连接 wifi
 ```
-10. 设置 alsa 默认声卡
+nmcli device wifi list
+nmcli device wifi connect SSID password PASSWORD
+```
+```
+11. 设置 alsa 默认声卡
 ```
 aplay -l
 
@@ -64,9 +70,11 @@ defaults.pcm.device 1
 defaults.ctl.card 1" >> /etc/asound.conf
 
 ```
-
-11. 连接 wifi
+12. 散热配置，温度控制
 ```
-nmcli device wifi list
-nmcli device wifi connect SSID password PASSWORD
+emerge -avq lm_sensors mbpfan
+sensors-detect
+systemctl enable --now lm_sensors
+systemctl enable --now mbpfan
+
 ```
