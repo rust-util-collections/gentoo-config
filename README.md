@@ -19,6 +19,7 @@ chroot . /bin/bash
 3. 更新基本系统
 ```
 emerge-webrsync
+eselect profile set default/linux/amd64/17.0/desktop (stable)
 emerge -avquDN --with-bdeps=y @world && emerge -c
 ```
 4. 安装 gentoo-sources，配置、编译内核
@@ -32,8 +33,7 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 6. 最小化安装 xfce 桌面    
 ```
-emerge -avq xorg-server\
-			xfwm4 xfdesktop xfce4-session xfce4-settings\
+emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
 			gtk-engines-xfce freedesktop-icon-theme dejavu
 cd gentoo_config/
 cp xinitrc ~/.xinitrc
