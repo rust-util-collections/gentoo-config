@@ -31,6 +31,7 @@ emerge -avquDN --with-bdeps=y @world && emerge -c
 5. 安装 gentoo-sources，配置、编译内核
 ```
 cd /usr/src/linux
+make -j9 && make modules_install
 cp -L arch/x86_64/boot/bzImage /boot/efi/bootx64.efi
 ```
 6. 安装 efibootmgr，添加 EFI 启动项   
