@@ -47,12 +47,17 @@ emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
 cp gentoo_config/xinitrc ~/.xinitrc
 ```
 8. 连接 wifi    
-若需连接 802.1X 企业网络，参考这篇文章    
-[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
-或者可暂时安装 nm-applet 套件，使用其nm-connection-editor 编辑完配置文件后，再将其卸掉     
+	- 家庭网络    
 ```
 nmcli device wifi list
 nmcli device wifi connect $SSID password $PASSWORD
+```
+	- 802.1X 企业网络      
+参考这篇文章     
+[https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli](https://major.io/2016/05/03/802-1x-networkmanager-using-nmcli/)     
+或者可暂时安装 nm-applet 套件，使用其nm-connection-editor 编辑完配置文件后，再将其卸掉     
+```
+cp gentoo_config/wifi_cfg /etc/NetworkManager/system-connections/
 ```
 9. 散热配置，温度控制
 ```
