@@ -37,6 +37,7 @@ cp -L arch/x86_64/boot/bzImage /boot/efi/bootx64.efi
 ```
 6. 安装 efibootmgr，添加 EFI 启动项   
 ```
+emerge -avq efibootmgr
 efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 7. 最小化安装 xfce 桌面    
@@ -91,7 +92,6 @@ systemctl daemon-reload
 systemctl start blctl.service
 
 emerge -avq xbindkeys
-cp gentoo_config/blctl.sh /usr/local/bin/
 cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
 xbindkeys
 ```
