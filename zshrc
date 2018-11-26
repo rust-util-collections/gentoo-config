@@ -1,7 +1,7 @@
+#export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
+#export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+#export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 source ~/.cargo/env
-export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
-export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
-export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 
 export HISTSIZE=2000
 export HISTFILE="$HOME/.history" 
