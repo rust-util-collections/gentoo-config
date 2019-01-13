@@ -1,6 +1,7 @@
 # <fs>		<mountpoint>	<type>		<opts>		<dump/pass>
 
-/dev/sda1	/boot/efi	vfat	noauto						0 0
-/dev/sda2	/		f2fs	discard,noatime,defaults			0 0
+/dev/sda1		/boot/efi	vfat	noauto						0 0
+/dev/sda2		/			btrfs	ssd,noatime,defaults		0 0
+/dev/nvme0n1	/data		btrfs	ssd,noatime,defaults		0 0
 
-tmpfs		/tmp		tmpfs	noatime,mode=1777,size=12G,defaults		0 0
+tmpfs			/tmp		tmpfs	noatime,mode=1777,size=24G	0 0

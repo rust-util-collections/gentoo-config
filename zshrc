@@ -1,20 +1,21 @@
-export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
+export LANG=en_US.UTF-8
+export LC_CTYPE=zh_CN.UTF-8
 
 # rust env
 source ~/.cargo/env
-export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
-export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
-export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 
 # golang env
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn
 
-export PATH=~/cargo/bin:$PATH:~/go/bin
+export PATH=~/cargo/bin:~/go/bin:$PATH
 
 export HISTSIZE=2000
-export HISTFILE="$HOME/.history" 
+export HISTFILE="$HOME/.history"
 export SAVEHIST=$HISTSIZE
+
+export EDITOR=vim
+export EIX_LIMIT_COMPACT=0
 
 # 启动自动补全
 autoload -U compinit
@@ -37,15 +38,10 @@ setopt hist_ignore_all_dups
 
 set -o vi
 
-alias ls="ls -FG"
-alias ll="ls -sailFG"
+alias ls="ls -F"
+alias ll="ls -sailF"
 alias .="source"
 alias h="history 1"
 
 alias top="htop"
-alias sensors="sensors | head -12"
-
-# ibus
-export GTK_IM_MODULE=ibus
-export XMODIFIERS=@im=ibus
-export QT_IM_MODULE=ibus
+alias sjj="ssh root@192.168.3.22"

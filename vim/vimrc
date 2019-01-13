@@ -25,7 +25,8 @@ set noswapfile                "关闭交换文件
 set hidden                    "允许在有未保存的修改时切换缓冲区
 
 "显示
-colorscheme desert           "选择配色方案
+set background=dark
+colorscheme solarized         "选择配色方案
 set t_Co=256                  "可以使用的颜色数目
 set number                    "显示行号
 set laststatus=2              "显示状态行
@@ -63,23 +64,23 @@ nnoremap <C-k> :tabc<CR>
 "===================插件管理======================
 
 " 下载pathogen
-" git clone https://github.com/kt10/vim-pathogen.git /tmp/abcdef && mv /tmp/abcdef/autoload ~/.vim/
+" git clone --depth 1 https://gitee.com/kt10/vim-pathogen.git /tmp/abcdef && mv /tmp/abcdef/autoload ~/.vim/
 
 " 自动配对括号
-" git clone git://github.com/jiangmiao/auto-pairs.git ~/.vim/bundle/auto-pairs
+" git clone --depth 1 git://github.com/jiangmiao/auto-pairs.git ~/.vim/bundle/auto-pairs
 
 " 目录管理器
-" git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
+" git clone --depth 1 https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 
 "tagbar 插件
-" git clone https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
+" git clone --depth 1 https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
 
 "gotags：显示 go 的tagbar
 "go get -u github.com/jstemmer/gotags
 "go install
 
 " 下载 YCM 及其附属模块源码
-"git clone https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe
+"git clone --depth 1 https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe
 "git submodule update --init --recursive
 
 " 编译安装全功能 YCM （需要首先安装最新版本的 clang 库：libclang.so）；也可以使用自带的脚本安装，如仅安装 go 的语义补全：./install.py  --gocode-completer
@@ -108,7 +109,7 @@ execute pathogen#infect()
 let g:NERDTreeCaseSensitiveSort = 1
 let g:NERDTreeWinSize = 32
 let g:NERDTreeWinPos = "left"
-nnoremap <F5> :NERDTreeToggle<CR> 
+nnoremap <F3> :NERDTreeToggle<CR> 
 "nnoremap <Leader>o :NERDTreeFind<CR>
 
 let g:tagbar_type_go = { 
@@ -141,18 +142,21 @@ let g:tagbar_type_go = {
 
 "-----tagbar-------
 let g:tagbar_width=32
-"let g:tagbar_autofocus=1
-nnoremap <F6> :TagbarToggle<CR>
+let g:tagbar_autofocus=1
+nnoremap <F4> :TagbarToggle<CR>
 
 "-----YouCompleteMe-----
-let g:ycm_server_python_interpreter= '/usr/bin/python'
-let g:ycm_python_binary_path = '/usr/bin/python'
+let g:ycm_server_python_interpreter= '/usr/bin/python3.8'
+let g:ycm_python_binary_path = '/usr/bin/python3.8'
 let g:ycm_global_ycm_extra_conf = '~/.ycm_extra_conf.py' "默认配置文件
-"let g:ycm_key_invoke_completion = '<C-Tab>'         "跨文件补全
+"let g:ycm_key_invoke_completion = '<C-Tab>'        "跨文件补全
 let g:ycm_confirm_extra_conf = 0                    "关闭加载配置文件提示
 let g:ycm_cache_omnifunc = 0                        "关闭补全缓存
-let g:ycm_enable_diagnostic_signs = 0               "关闭诊断提示符
-let g:ycm_enable_diagnostic_highlighting = 1        "关闭诊断高亮
+let g:ycm_enable_diagnostic_signs = 0              "关闭诊断提示符
+"let g:ycm_enable_diagnostic_highlighting = 1       "关闭诊断高亮
+"let g:ycm_echo_current_diagnostic = 1
+let g:ycm_auto_hover = -1                           "关闭自动显示所在行的文档
+let g:ycm_hover_popup = -1                          "关闭自动弹窗显示所在行的文档
 "let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
 let g:ycm_min_num_of_chars_for_completion = 2       "n字符开始自动补全
 

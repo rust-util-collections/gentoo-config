@@ -1,0 +1,1 @@
+dev-lang/php acl berkdb bzip2 cli ctype fileinfo filter flatfile gdbm iconv ipv6 json opcache phar posix readline session simplexml ssl systemd tokenizer unicode xml zlib bcmath fpm mysql mysqli pdo soap sockets
