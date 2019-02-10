@@ -3,6 +3,12 @@ export LC_CTYPE=zh_CN.UTF-8
 
 # rust env
 source ~/.cargo/env
+export CARGO_GIT_FETCH_WITH_CLI=true
+export RUSTFLAGS="-C target-feature=-crt-static"
+# export BTM_VOLUME=/data/...
+# export TENDERMINT_HOME=/data/...
+# export ROCKSDB_STATIC=1
+# export ROCKSDB_LIB_DIR=/usr/local/lib/
 
 # golang env
 export GO111MODULE=on
@@ -44,4 +50,14 @@ alias .="source"
 alias h="history 1"
 
 alias top="htop"
-alias sjj="ssh root@192.168.3.22"
+alias sensors="sensors 2>/dev/null"
+
+for i in "${HOME}" "${HOME}/trash"; do
+    for j in $(find $i -maxdepth 1 -type d); do
+        if [ -f ${j}/Cargo.toml ]; then
+            rm -rf ${j}/target
+            mkdir -p /tmp/${j}/target || exit 1
+            ln -sv /tmp/${j}/target ${j}/target || exit 1
+        fi
+    done
+done
