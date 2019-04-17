@@ -106,3 +106,9 @@ echo "defaults.pcm.card 1
 defaults.pcm.device 1
 defaults.ctl.card 1" >> /etc/asound.conf
 ```
+13. 不使用 initramfs 更新 microcode
+```
+[        0.000000] [Firmware Bug]: TSC_DEADLINE disabled due to Errata; please update microcode to version: 0x52 (or later)
+```
+Linux 内核可以在每次启动时，动态加载 CPU 微码，从而不需要对主板进行硬更新。如果开机上见到类似上方的错误信息，可参照如下 wiki 页面进行处理：    
+<https://wiki.gentoo.org/wiki/Intel_microcode#New_method_without_initram-fs.2Fdisk>
