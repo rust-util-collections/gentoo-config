@@ -116,5 +116,19 @@ Linux 内核可以在每次启动时，动态加载 CPU 微码，从而不需要
 处理完之后，通过如下方式核对更新结果：
 ```
 grep microcode /proc/cpuinfo
-dmesg| grep -in microcode
+dmesg | grep -in microcode
+```
+结果示例：
+```
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+microcode	: 0x25
+[    0.000000] microcode: microcode updated early to revision 0x25, date = 2018-04-02
+[    0.394453] microcode: sig=0x306c3, pf=0x2, revision=0x25
+[    0.394599] microcode: Microcode Update Driver: v2.2.
 ```
