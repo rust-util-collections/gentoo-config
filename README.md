@@ -2,20 +2,7 @@
 
 #### <1> VIM nerd_tree 侧栏乱码问题:
 
-```shell
-#
-# 注释掉不能显示的富文本字体
-# vim /usr/local/share/vim/vim74/plugin/NERD_tree.vim
-#
-
-"if !nerdtree#runningWindows() && !nerdtree#runningCygwin()
-"    call s:initVariable('g:NERDTreeDirArrowExpandable', '▸')
-"    call s:initVariable('g:NERDTreeDirArrowCollapsible', '▾')
-"else
-    call s:initVariable('g:NERDTreeDirArrowExpandable', '+')
-    call s:initVariable('g:NERDTreeDirArrowCollapsible', '~')
-"endif
-```
+outdated!
 
 #### <2> 禁用 ubuntu Dock 栏
 
@@ -54,29 +41,30 @@ enforce = none
 - [**/usr/x86_64-unknown-linux-musl/etc/portage/make.conf**](usr_x86_64-unknown-linux-musl_etc_portage_make.conf)
 
 ```shell
+emerge -avq crossdev
+
+PORTAGE_CONFIGROOT=/usr/x86_64-unknown-linux-musl eselect profile list
+PORTAGE_CONFIGROOT=/usr/x86_64-unknown-linux-musl eselect profile set XXX
+
+mkdir -p /var/db/repos/crossdev/{profiles,metadata}
+echo 'crossdev' > /var/db/repos/crossdev/profiles/repo_name
+echo 'masters = gentoo' > /var/db/repos/crossdev/metadata/layout.conf
+chown -R portage:portage /var/db/repos/crossdev
+mkdir -p /etc/portage/repos.conf
+
+echo "[crossdev]
+location = /var/db/repos/crossdev
+priority = 10
+masters = gentoo
+auto-sync = no" > /etc/portage/repos.conf/crossdev.conf
+ 
 crossdev --stable -t x86_64-unknown-linux-musl
 CHOST=x86_64-unknown-linux-musl cross-emerge -avq openssl net-misc/curl
 ```
 
 #### <6> YouCompleteMe on Alpine(musl)
 
-Issue (`install.py --rust-completer --go-completer`):
-
-```shell
-/home/fh/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/absl/absl/base/internal/spinlock_linux.inc:17:10: fatal error: linux/futex.h: No such file or directory
-   17 | #include <linux/futex.h>
-      |          ^~~~~~~~~~~~~~~
-compilation terminated.
-make[3]: *** [absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/build.make:76: absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/internal/spinlock_wait.cc.o] Error 1
-make[2]: *** [CMakeFiles/Makefile2:602: absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/all] Error 2
-make[2]: *** Waiting for unfinished jobs....
-```
-
-Solution:
-
-```shell
-apk add linux-headers
-```
+outdated!
 
 #### <7> Clean unneed packages on opensuse
 
@@ -108,6 +96,83 @@ export RUSTFLAGS="-C target-feature=-crt-static"
 enforce=none
 ```
 
-#### <11> Github/Google network settings
+#### <11> Docker modulers on gentoo
+
+```shell
+# `/etc/local.d/modprobe.start`,
+# auto-generated as `gentoo-local-modprobe.service`
+
+modprobe tun
+modprobe veth
+
+modprobe br_netfilter
+modprobe iptable_filter
+
+modprobe nf_nat
+modprobe iptable_nat
+modprobe xt_nat
+
+modprobe nf_conntrack
+modprobe xt_conntrack
+
+modprobe xt_MASQUERADE
+modprobe xt_addrtype
+```
+
+```
+# /lib/systemd/system/docker.service
+[Unit]
+...........
+Requires=docker.socket gentoo-local-modprobe.service
+...........
+```
+
+#### <12> Github/Google network settings
 
 [**World-wide network settings**](./github_google.md)
+
+#### <13> Major installing steps of the 'Gentoo Linux'
+
+```shell
+parted -a optimal /dev/...
+mkfs.vfat -F 32 ...
+mkfs.btrfs ...
+
+wget https://.../...stage3.tar.gz
+tar -xpf ...stage3.tar.gz
+
+chroot ...
+
+blkid >> /etc/fstab
+vi /etc/fstab
+
+mount -a
+
+# config and compile kernel
+make -jN
+make modules_install
+make install
+
+# # initramfs
+# dracut --hostonly --force
+
+grub-install --efi-directory=/boot/efi
+grub-mkconfig -o /boot/grub/grub.cfg
+
+vi /etc/portage/make.conf
+emerge-websync
+eselect profile set N
+
+emerge linux-firmware
+
+emerge dhcpcd
+systemctl enable dhcpcd
+
+passwd root
+
+reboot
+
+# if reboot failed, try remove the initramfs file,
+# and `grub-mkconfig -o /boot/grub/grub.cfg`;
+# if this works, then `emerge -C installkernel` is a good idea.
+```
