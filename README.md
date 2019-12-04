@@ -77,6 +77,13 @@ chsh -s /bin/zsh $USENAME
 # C/rust/go 开发：vim，配合 YouCompleteMe
 # latex 开发：vscode，安装插件 latex workshop
 
+# golang env
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn  ＃七牛云提供的国内代理
+
+# rust env
+export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 ```
 11. 配置快捷键
 ```
