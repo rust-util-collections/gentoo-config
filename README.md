@@ -6,15 +6,18 @@
 1. 分区、chroot
 ```
 mkfs.vfat -F 32 /dev/sda1
-mkfs.ext4 /dev/sda2
+mkfs.f2fs /dev/sda2
 
-mount /dev/sda2 /mnt
-cd /mnt
+mkdir -p /mnt/gentoo
+mount /dev/sda2 /mnt/gentoo
+cd /mnt/gentoo
 
 mount -t proc /proc proc/
 mount --rbind /sys sys/
 mount --rbind /dev dev/
 chroot . /bin/bash
+export PATH=/usr/bin:/usr/sbin:/bin:/sbin
+source /etc/profile
 ```
 2. **为 root 设置密码**
 3. 基本环境配置
@@ -25,14 +28,15 @@ cp gentoo_config/MacBook_special/fstab /etc/fstab
 4. 更新基本系统
 ```
 emerge-webrsync
-eselect profile set default/linux/amd64/17.0/desktop (stable)
+eselect profile set default/linux/amd64/17.1/desktop (stable)
 emerge -avquDN --with-bdeps=y @world && emerge -c
 ```
 5. 安装 gentoo-sources，配置、编译内核
 ```
-cp gentoo_config/MacBook_special/config /usr/src/linux/.config
+cp gentoo_config/MacBook_special/kernel_config /usr/src/linux/.config
 cd /usr/src/linux
-make -j9 && make modules_install
+make -j9
+make modules_install
 cp -L arch/x86_64/boot/bzImage /boot/efi/bootx64.efi
 ```
 6. 安装 efibootmgr，添加 EFI 启动项   
@@ -42,8 +46,7 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 7. 最小化安装 xfce 桌面    
 ```
-emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings\
-			xfce4-terminal gtk-engines-xfce freedesktop-icon-theme dejavu
+emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal dejavu
 cp gentoo_config/xinitrc ~/.xinitrc
 ```
 8. 连接 wifi    
@@ -72,7 +75,7 @@ echo "app-editors/vim -X python" >> /etc/portage/package.use/vim
 emerge -avq vim zsh google-chrome go dev-vcs/git
 chsh -s /bin/zsh $USENAME
 
-# C/go 开发：vim，配合 YouCompleteMe
+# C/rust/go 开发：vim，配合 YouCompleteMe
 # latex 开发：vscode，安装插件 latex workshop
 
 ```
@@ -103,7 +106,7 @@ xbindkeys
 aplay -l # 查看本机声卡信息
 
 echo "defaults.pcm.card 1
-defaults.pcm.device 1
+defaults.pcm.device 0
 defaults.ctl.card 1" >> /etc/asound.conf
 ```
 13. 不使用 initramfs 更新 microcode

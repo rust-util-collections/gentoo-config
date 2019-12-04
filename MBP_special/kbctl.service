@@ -1,0 +1,8 @@
+[Unit]
+After=network.target
+
+[Service]
+ExecStart=/root/kbctl.sh
+
+[Install]
+WantedBy=multi-user.target

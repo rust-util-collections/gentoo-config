@@ -1,12 +1,6 @@
 # <fs>		<mountpoint>	<type>		<opts>		<dump/pass>
 
-UUID=37A3-F7AA					/boot/efi	vfat	noauto						0 0
-UUID=0416861a-855c-4110-8e75-6eb29763e828	/		xfs	noatime,defaults				0 0
+/dev/sda1	/boot/efi	vfat	noauto						0 0
+/dev/sda2	/		f2fs	discard,noatime,defaults			0 0
 
-tmpfs						/tmp		tmpfs	noatime,mode=1777,defaults			0 0
-
-UUID=f53b4246-7044-45c6-9f59-d77d1eb4dda7	/btrfs		btrfs	ssd,discard,noatime,defaults			0 0
-UUID=f53b4246-7044-45c6-9f59-d77d1eb4dda7	/home		btrfs	ssd,discard,noatime,defaults,subvolid=258	0 0
-UUID=f53b4246-7044-45c6-9f59-d77d1eb4dda7	/usr/portage	btrfs	ssd,discard,noatime,defaults,subvolid=260	0 0
-UUID=f53b4246-7044-45c6-9f59-d77d1eb4dda7	/usr/src	btrfs	ssd,discard,noatime,defaults,subvolid=262	0 0
-
+tmpfs		/tmp		tmpfs	noatime,mode=1777,size=12G,defaults		0 0
