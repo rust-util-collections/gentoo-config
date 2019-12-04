@@ -47,7 +47,6 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 7. 最小化安装 xfce 桌面    
 ```
 emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal dejavu
-cp gentoo_config/xinitrc ~/.xinitrc
 ```
 8. 连接 wifi    
 - 家庭网络    
@@ -81,25 +80,14 @@ chsh -s /bin/zsh $USENAME
 ```
 11. 配置快捷键
 ```
-git clone https://github.com/kt10/blctl.git /tmp/
-cd /tmp/blctl/
-
-cargo build --release
-mv target/release/blctl /root/
-chmod +x /root/blctl
-
-go build src/blcli
-mv blcli /usr/local/bin/
-chmod +x /usr/local/bin/blcli
-
-cp gentoo_config/blctl.service /root/
-ln -sv /root/blctl.service /etc/systemd/system/multi-user.target.wants/
-systemctl daemon-reload
-systemctl start blctl.service
+cp MBP_special/kbctl.sh /root/
+cp MBP_special/kbctl.service /lib/systemd/system/
+cp -r MBP_special/home_bin ~/.bin
+systemctl enable --now kbctl.service
 
 emerge -avq xbindkeys
 cp gentoo_config/xbindkeysrc ~/.xbindkeysrc
-xbindkeys
+echo -e "xbindkeys \n exec startxfce4" > ~/.xinitrc
 ```
 12. 设置 alsa 默认声卡
 ```
