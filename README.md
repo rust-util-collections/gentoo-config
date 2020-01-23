@@ -1,8 +1,15 @@
 # gentoo-config
 
-#### <1> VIM nerd_tree 侧栏乱码问题:
+#### <1> NVIM Rust+Golang+Python
 
-outdated!
+```
+rustup component add rust-analyzer
+
+go install golang.org/x/tools/gopls@latest
+
+npm install -g pyright
+
+```
 
 #### <2> 禁用 ubuntu Dock 栏
 
@@ -77,6 +84,7 @@ alias clean="zypper packages --unneeded | awk -F'|' 'NR==0 || NR==1 || NR==2 || 
 
 ```shell
 apk add git-diff-highlight
+git config --global core.pager "less -R"
 # and then, re-login
 ```
 

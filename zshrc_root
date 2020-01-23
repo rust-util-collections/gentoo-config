@@ -1,0 +1,38 @@
+alias top="htop"
+
+alias ls="ls -F --color=always"
+alias ll="ls -sailF"
+alias .="source"
+alias h="history 1"
+
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=zh_CN.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+
+export PATH=${PATH#*:$HOME/.local/bin}
+
+export HISTSIZE=2000
+export HISTFILE="$HOME/.history"
+export SAVEHIST=$HISTSIZE
+
+export EDITOR=vim
+export EIX_LIMIT_COMPACT=0
+
+# 启动自动补全
+autoload -U compinit
+compinit
+# 以更悦目的格式显示补全信息
+zstyle ':completion:*:descriptions' format '%U%B%d%b%u'
+zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
+
+# 载入主提示符主题
+autoload -U promptinit
+promptinit
+# 比较悦目的主题还有：gentoo、walters、adam2 等
+prompt redhat
+
+# 忽略所有重复的历史记录
+setopt hist_ignore_all_dups
+
+set -o vi
