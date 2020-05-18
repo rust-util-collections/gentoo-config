@@ -1,4 +1,4 @@
-export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
+# export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
 
 # rust env
 source ~/.cargo/env

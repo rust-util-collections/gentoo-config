@@ -63,23 +63,23 @@ nnoremap <C-k> :tabc<CR>
 "===================插件管理======================
 
 " 下载pathogen
-" git clone https://github.com/kt10/vim-pathogen.git /tmp/abcdef && mv /tmp/abcdef/autoload ~/.vim/
+" git clone --depth 1 https://gitee.com/kt10/vim-pathogen.git /tmp/abcdef && mv /tmp/abcdef/autoload ~/.vim/
 
 " 自动配对括号
-" git clone git://github.com/jiangmiao/auto-pairs.git ~/.vim/bundle/auto-pairs
+" git clone --depth 1 git://github.com/jiangmiao/auto-pairs.git ~/.vim/bundle/auto-pairs
 
 " 目录管理器
-" git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
+" git clone --depth 1 https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree
 
 "tagbar 插件
-" git clone https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
+" git clone --depth 1 https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
 
 "gotags：显示 go 的tagbar
 "go get -u github.com/jstemmer/gotags
 "go install
 
 " 下载 YCM 及其附属模块源码
-"git clone https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe
+"git clone --depth 1 https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe
 "git submodule update --init --recursive
 
 " 编译安装全功能 YCM （需要首先安装最新版本的 clang 库：libclang.so）；也可以使用自带的脚本安装，如仅安装 go 的语义补全：./install.py  --gocode-completer
@@ -145,8 +145,8 @@ let g:tagbar_width=32
 nnoremap <F6> :TagbarToggle<CR>
 
 "-----YouCompleteMe-----
-let g:ycm_server_python_interpreter= '/usr/bin/python'
-let g:ycm_python_binary_path = '/usr/bin/python'
+let g:ycm_server_python_interpreter= '/usr/bin/python3'
+let g:ycm_python_binary_path = '/usr/bin/python3'
 let g:ycm_global_ycm_extra_conf = '~/.ycm_extra_conf.py' "默认配置文件
 "let g:ycm_key_invoke_completion = '<C-Tab>'         "跨文件补全
 let g:ycm_confirm_extra_conf = 0                    "关闭加载配置文件提示

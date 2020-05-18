@@ -46,7 +46,7 @@ efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 7. 最小化安装 xfce 桌面    
 ```
-emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal dejavu
+emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal networkmanager
 ```
 8. 连接 wifi    
 - 家庭网络    
