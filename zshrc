@@ -1,20 +1,21 @@
-# export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
-
 # rust env
-source ~/.cargo/env
+# export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
+# export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
 export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
-export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
-export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
+source ~/.cargo/env
 
 # golang env
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn
 
-export PATH=~/cargo/bin:$PATH:~/go/bin
+export PATH=~/.bin:~/cargo/bin:~/go/bin:$PATH
 
 export HISTSIZE=2000
 export HISTFILE="$HOME/.history" 
 export SAVEHIST=$HISTSIZE
+
+export EDITOR=vim
+export EIX_LIMIT_COMPACT=0
 
 # 启动自动补全
 autoload -U compinit

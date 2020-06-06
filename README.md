@@ -45,8 +45,11 @@ emerge -avq efibootmgr
 efibootmgr -c -d /dev/sda -p 1 -L gentoo -l "bootx64.efi"
 ```
 7. 最小化安装 xfce 桌面    
+
+> 默认的notify daemon 调节亮度时显示错误，安装 xfce4-notifyd 替代。
+
 ```
-emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal networkmanager
+emerge -avq xorg-server xfwm4 xfdesktop xfce4-session xfce4-settings xfce4-terminal xfce4-notifyd networkmanager
 ```
 8. 连接 wifi    
 - 家庭网络    
@@ -61,7 +64,7 @@ nmcli device wifi connect $SSID password $PASSWORD
 ```
 cp gentoo_config/wifi_cfg /etc/NetworkManager/system-connections/
 ```
-9. 散热配置，温度控制
+9. 散热配置，温度控制(?)
 ```
 emerge -avq lm_sensors mbpfan
 sensors-detect
