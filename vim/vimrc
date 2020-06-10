@@ -25,7 +25,8 @@ set noswapfile                "关闭交换文件
 set hidden                    "允许在有未保存的修改时切换缓冲区
 
 "显示
-colorscheme desert           "选择配色方案
+set background=dark
+colorscheme solarized         "选择配色方案
 set t_Co=256                  "可以使用的颜色数目
 set number                    "显示行号
 set laststatus=2              "显示状态行
