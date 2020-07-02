@@ -60,7 +60,7 @@ if [[ ! -d "${SCRIPT_DIR}/.git" ]]; then
     SCRIPT_DIR="${CLONE_DIR}"
 fi
 
-KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel_configs/EPYC_9474F_supermicro_h13_ssl___without_initramfs_without_netfilter"
+KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel/EPYC_9474F_supermicro_h13_ssl___without_initramfs_without_netfilter"
 
 # Detect disk type for partition naming (nvme vs sata/sas)
 if [[ "${TARGET_DISK}" == *"nvme"* ]]; then
@@ -266,11 +266,11 @@ fi
 #######################################
 info "Step 10: Copying zshrc files..."
 
-if [[ -f "${SCRIPT_DIR}/zshrc" ]]; then
-    cp "${SCRIPT_DIR}/zshrc" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc"
+if [[ -f "${SCRIPT_DIR}/shell/zshrc" ]]; then
+    cp "${SCRIPT_DIR}/shell/zshrc" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc"
 fi
-if [[ -f "${SCRIPT_DIR}/zshrc_root" ]]; then
-    cp "${SCRIPT_DIR}/zshrc_root" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc_root"
+if [[ -f "${SCRIPT_DIR}/shell/zshrc_root" ]]; then
+    cp "${SCRIPT_DIR}/shell/zshrc_root" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc_root"
 fi
 
 #######################################
