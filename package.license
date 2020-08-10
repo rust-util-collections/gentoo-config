@@ -1,0 +1,11 @@
+# required by linux-firmware (argument)
+>=sys-kernel/linux-firmware-20200519 linux-fw-redistributable no-source-code
+# required by google-chrome (argument)
+>=www-client/google-chrome-83.0.4103.97 google-chrome
+# required by opera (argument)
+=www-client/opera-68.0.3618.104 OPERA-2014
+app-office/wps-office WPS-EULA
+# required by opera (argument)
+=www-client/opera-68.0.3618.165 OPERA-2014
+# required by opera (argument)
+>=www-client/opera-69.0.3686.77 OPERA-2014

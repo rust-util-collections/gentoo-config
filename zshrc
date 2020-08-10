@@ -1,14 +1,15 @@
 # rust env
-# export LIBCLANG_PATH=/usr/lib/llvm/8/lib64/
-# export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
-export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
+export EXTERNAL_LIBCLANG_PATH=/usr/lib/llvm/10/lib64
+# export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+# export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 source ~/.cargo/env
+export RUST_SRC_PATH=`rustc --print sysroot`/lib/rustlib/src/rust/src
 
 # golang env
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn
 
-export PATH=~/.bin:~/cargo/bin:~/go/bin:$PATH
+export PATH=~/.bin:~/cargo/bin:~/go/bin:${PATH}
 
 export HISTSIZE=2000
 export HISTFILE="$HOME/.history" 
@@ -43,8 +44,9 @@ alias ll="ls -sailFG"
 alias .="source"
 alias h="history 1"
 
-alias top="htop"
-alias sensors="sensors | head -12"
+# alias top="htop"
+alias sensors="sensors | head -20"
+alias sp="sslocal -c ~/.bin/ss.json --protocol http"
 
 # ibus
 export GTK_IM_MODULE=ibus
