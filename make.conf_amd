@@ -3,9 +3,9 @@ CXXFLAGS="${CFLAGS}"
 MAKEOPTS="-j24"
 CHOST="x86_64-pc-linux-gnu"
 
-USE="threads jemalloc systemd -elogind -consolekit udev X gtk gtk3 opengl truetype jpeg png -iptables -firewalld -multilib -tcpd -sound -alsa -pulseaudio -alsa-plugin -gpm -cdda -udisks -cups -emoji -calendar -sftp -nls -samba -bluetooth -vlc -ldap -doc -gnome -kde -qt -qt4 -qt5 -http -debug"
+# USE="threads jemalloc systemd -elogind -consolekit udev X gtk gtk3 opengl truetype jpeg png -iptables -firewalld -multilib -tcpd -sound -alsa -pulseaudio -alsa-plugin -gpm -cdda -udisks -cups -emoji -calendar -sftp -samba -bluetooth -vlc -ldap -doc -gnome -kde -qt -qt4 -qt5 -http -debug"
 
-# USE="threads jemalloc systemd -multilib -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -nls -samba -ldap -doc"
+USE="threads jemalloc systemd -nls -multilib -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -samba -ldap -doc"
 
 CPU_FLAGS_X86="aes avx avx2 f16c fma3 mmx mmxext pclmul popcnt sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3"
 
@@ -29,9 +29,8 @@ PORTAGE_ELOG_SYSTEM="save"
 ABI_X86="64"
 FEATURES="nostrip"
 
-L10N="uk zh-CN zh-TW"
-
 GRUB_PLATFORMS="efi-64"
-LLVM_TARGETS="X86 BPF WebAssembly ARM AArch64 RISCV AMDGPU"
+
+LLVM_TARGETS="X86 BPF WebAssembly AMDGPU"
 QEMU_SOFTMMU_TARGETS="x86_64"
 QEMU_USER_TARGETS="x86_64"

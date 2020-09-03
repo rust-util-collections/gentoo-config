@@ -1,1 +1,1 @@
-app-emulation/qemu -gtk -nls -iscsi -nfs -jpeg -png -usb -usbredir -curl -selinux -spice -ncurses -sdl -xen -alsa -oss -bluetooth -usbredir QEMU_SOFTMMU_TARGETS: mips64 mips64el x86_64 QEMU_USER_TARGETS: x86_64
+app-emulation/qemu vhost-net -nls -iscsi -nfs -opengl -jpeg -png -usb usbredir -curl -selinux spice -ncurses -sdl -gtk -xen -alsa -bluetooth
