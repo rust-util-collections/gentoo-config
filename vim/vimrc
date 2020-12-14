@@ -109,7 +109,7 @@ execute pathogen#infect()
 let g:NERDTreeCaseSensitiveSort = 1
 let g:NERDTreeWinSize = 32
 let g:NERDTreeWinPos = "left"
-nnoremap <F5> :NERDTreeToggle<CR> 
+nnoremap <F3> :NERDTreeToggle<CR> 
 "nnoremap <Leader>o :NERDTreeFind<CR>
 
 let g:tagbar_type_go = { 
@@ -142,19 +142,21 @@ let g:tagbar_type_go = {
 
 "-----tagbar-------
 let g:tagbar_width=32
-"let g:tagbar_autofocus=1
-nnoremap <F6> :TagbarToggle<CR>
+let g:tagbar_autofocus=1
+nnoremap <F4> :TagbarToggle<CR>
 
 "-----YouCompleteMe-----
-let g:ycm_server_python_interpreter= '/usr/bin/python3'
-let g:ycm_python_binary_path = '/usr/bin/python3'
+let g:ycm_server_python_interpreter= '/usr/bin/python3.8'
+let g:ycm_python_binary_path = '/usr/bin/python3.8'
 let g:ycm_global_ycm_extra_conf = '~/.ycm_extra_conf.py' "默认配置文件
-"let g:ycm_key_invoke_completion = '<C-Tab>'         "跨文件补全
+"let g:ycm_key_invoke_completion = '<C-Tab>'        "跨文件补全
 let g:ycm_confirm_extra_conf = 0                    "关闭加载配置文件提示
 let g:ycm_cache_omnifunc = 0                        "关闭补全缓存
-let g:ycm_enable_diagnostic_signs = 0               "关闭诊断提示符
-let g:ycm_enable_diagnostic_highlighting = 1        "关闭诊断高亮
-"let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
+let g:ycm_enable_diagnostic_signs = 0              "关闭诊断提示符
+"let g:ycm_enable_diagnostic_highlighting = 1       "关闭诊断高亮
+"let g:ycm_echo_current_diagnostic = 1
+let g:ycm_auto_hover = 0                            "关闭自动弹窗显示所在行的文档
+let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
 let g:ycm_min_num_of_chars_for_completion = 2       "n字符开始自动补全
 
 "跳转至定义或声明处
