@@ -155,8 +155,9 @@ let g:ycm_cache_omnifunc = 0                        "关闭补全缓存
 let g:ycm_enable_diagnostic_signs = 0              "关闭诊断提示符
 "let g:ycm_enable_diagnostic_highlighting = 1       "关闭诊断高亮
 "let g:ycm_echo_current_diagnostic = 1
-let g:ycm_auto_hover = 0                            "关闭自动弹窗显示所在行的文档
-let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
+let g:ycm_auto_hover = -1                           "关闭自动显示所在行的文档
+let g:ycm_hover_popup = -1                          "关闭自动弹窗显示所在行的文档
+"let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
 let g:ycm_min_num_of_chars_for_completion = 2       "n字符开始自动补全
 
 "跳转至定义或声明处
