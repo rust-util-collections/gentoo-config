@@ -16,3 +16,13 @@
     call s:initVariable('g:NERDTreeDirArrowCollapsible', '~')
 "endif
 ```
+
+#### <2> 禁用 ubuntu Dock 栏
+
+> SEE ALSO: https://linux.cn/article-10170-1.html
+
+```
+    gsettings set org.gnome.shell.extensions.dash-to-dock autohide false
+    gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+    gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false
+```
