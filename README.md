@@ -22,7 +22,14 @@
 > SEE ALSO: https://linux.cn/article-10170-1.html
 
 ```
-    gsettings set org.gnome.shell.extensions.dash-to-dock autohide false
-    gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
-    gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false
+gsettings set org.gnome.shell.extensions.dash-to-dock autohide false
+gsettings set org.gnome.shell.extensions.dash-to-dock dock-fixed false
+gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false
+```
+
+#### <3> YouCompleteMe 'runtime error'
+
+```shell
+cd YouCompleteMe || exit 1
+perl -pi -e 's/RUST_TOOLCHAIN\s*=.*/RUST_TOOLCHAIN = "nightly"/g' third_party/ycmd/build.py
 ```
