@@ -30,6 +30,11 @@ gsettings set org.gnome.shell.extensions.dash-to-dock intellihide false
 #### <3> YouCompleteMe 'runtime error'
 
 ```shell
-cd YouCompleteMe || exit 1
+rustup component add rust-src
+rustup component add rust-src --toolchain nightly
+
+cd YouCompleteMe
 perl -pi -e 's/RUST_TOOLCHAIN\s*=.*/RUST_TOOLCHAIN = "nightly"/g' third_party/ycmd/build.py
+
+./install.py --rust-completer --go-completer
 ```
