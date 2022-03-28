@@ -38,3 +38,22 @@ perl -pi -e 's/RUST_TOOLCHAIN\s*=.*/RUST_TOOLCHAIN = "nightly"/g' third_party/yc
 
 ./install.py --rust-completer --go-completer
 ```
+
+#### <4> Change passwd rules
+
+`man passwdqc.conf`
+
+```shell
+# /etc/security/passwdqc.conf
+enforce = none
+```
+
+#### <5> Crossdev compiling
+
+- **https://wiki.gentoo.org/wiki/Crossdev**
+- [**/usr/x86_64-unknown-linux-musl/etc/portage/make.conf**](usr_x86_64-unknown-linux-musl_etc_portage_make.conf)
+
+```shell
+crossdev --stable -t x86_64-unknown-linux-musl
+CHOST=x86_64-unknown-linux-musl cross-emerge -avq openssl net-misc/curl
+```
