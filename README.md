@@ -77,3 +77,10 @@ Solution:
 ```shell
 apk add linux-headers
 ```
+
+#### <7> Clean unneed packages on opensuse
+
+```shell
+# add this alias to '/root/.bashrc' or '/root/.zshrc'
+alias clean="zypper packages --unneeded | awk -F'|' 'NR==0 || NR==1 || NR==2 || NR==3 || NR==4 {next} {print \$3}' | grep -v Name | xargs zypper remove --clean-deps"
+```
