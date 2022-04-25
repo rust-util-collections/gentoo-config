@@ -84,3 +84,30 @@ apk add linux-headers
 # add this alias to '/root/.bashrc' or '/root/.zshrc'
 alias clean="zypper packages --unneeded | awk -F'|' 'NR==0 || NR==1 || NR==2 || NR==3 || NR==4 {next} {print \$3}' | grep -v Name | xargs zypper remove --clean-deps"
 ```
+
+#### <8> Colorful git-diff on Alpine linux
+
+```shell
+apk add git-diff-highlight
+# and then, re-login
+```
+
+#### <9> MUSL platform: "rustc: Dynamic loading not supported"
+
+> disable the default feature of 'static link'
+
+```shell
+# ~/.bashrc or ~/.zshrc
+export RUSTFLAGS="-C target-feature=-crt-static"
+```
+
+#### <10> Allow setting weak password
+
+```shell
+# vi /etc/security/passwdqc.conf
+enforce=none
+```
+
+#### <11> Github/Google network settings
+
+[**World-wide network settings**](./github_google.md)
