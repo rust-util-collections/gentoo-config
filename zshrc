@@ -1,5 +1,6 @@
 export LANG=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
+export CARGO_GIT_FETCH_WITH_CLi=true
 
 # rust env
 source ~/.cargo/env
@@ -52,12 +53,12 @@ alias h="history 1"
 alias top="htop"
 alias sensors="sensors 2>/dev/null"
 
-for i in "${HOME}" "${HOME}/trash"; do
-    for j in $(find $i -maxdepth 1 -type d); do
-        if [ -f ${j}/Cargo.toml ]; then
-            rm -rf ${j}/target
-            mkdir -p /tmp/${j}/target || exit 1
-            ln -sv /tmp/${j}/target ${j}/target || exit 1
-        fi
-    done
-done
+# for i in "${HOME}" "${HOME}/trash"; do
+#     for j in $(find $i -maxdepth 1 -type d); do
+#         if [ -f ${j}/Cargo.toml ]; then
+#             rm -rf ${j}/target
+#             mkdir -p /tmp/${j}/target || exit 1
+#             ln -sv /tmp/${j}/target ${j}/target || exit 1
+#         fi
+#     done
+# done
