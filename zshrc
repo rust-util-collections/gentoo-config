@@ -1,6 +1,5 @@
 export LANG=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
-export CARGO_GIT_FETCH_WITH_CLi=true
 
 # rust env
 source ~/.cargo/env
