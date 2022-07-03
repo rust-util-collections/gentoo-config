@@ -34,7 +34,7 @@ zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
 autoload -U promptinit
 promptinit
 # 比较悦目的主题还有：gentoo、walters、adam2 等
-prompt clint
+prompt redhat
 
 # 次提示符，显示当前有效用户身份及工作目录
 # RPROMPT="%F{magenta}%n@%~%f"
@@ -44,7 +44,7 @@ setopt hist_ignore_all_dups
 
 set -o vi
 
-alias ls="ls -F"
+alias ls="ls -F --color=always"
 alias ll="ls -sailF"
 alias .="source"
 alias h="history 1"
