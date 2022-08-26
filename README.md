@@ -54,6 +54,18 @@ enforce = none
 - [**/usr/x86_64-unknown-linux-musl/etc/portage/make.conf**](usr_x86_64-unknown-linux-musl_etc_portage_make.conf)
 
 ```shell
+mkdir -p /var/db/repos/crossdev/{profiles,metadata}
+echo 'crossdev' > /var/db/repos/crossdev/profiles/repo_name
+echo 'masters = gentoo' > /var/db/repos/crossdev/metadata/layout.conf
+chown -R portage:portage /var/db/repos/crossdev
+mkdir -p /etc/portage/repos.conf
+
+echo "[crossdev]
+location = /var/db/repos/crossdev
+priority = 10
+masters = gentoo
+auto-sync = no" > /etc/portage/repos.conf/crossdev.conf
+ 
 crossdev --stable -t x86_64-unknown-linux-musl
 CHOST=x86_64-unknown-linux-musl cross-emerge -avq openssl net-misc/curl
 ```
