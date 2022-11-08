@@ -76,8 +76,7 @@ nnoremap <C-k> :tabc<CR>
 " git clone --depth 1 https://github.com/majutsushi/tagbar.git ~/.vim/bundle/tagbar
 
 "gotags：显示 go 的tagbar
-"go get -u github.com/jstemmer/gotags
-"go install
+"go install github.com/jstemmer/gotags@latest
 
 " 下载 YCM 及其附属模块源码
 "git clone --depth 1 https://github.com/Valloric/YouCompleteMe.git ~/.vim/bundle/YouCompleteMe

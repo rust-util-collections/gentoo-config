@@ -53,12 +53,12 @@ alias h="history 1"
 alias top="htop"
 alias sensors="sensors 2>/dev/null"
 
-for i in "${HOME}" "${HOME}/trash"; do
-    for j in $(find $i -maxdepth 1 -type d); do
-        if [[ -d ${j} && -f ${j}/Cargo.toml && (! -d /tmp/${j}/target) ]]; then
-            rm -rf ${j}/target /tmp/${j}/target
-            mkdir -p /tmp/${j}/target || exit 1
-            ln -sv /tmp/${j}/target ${j}/target || exit 1
-        fi
-    done
-done
+# for i in "${HOME}" "${HOME}/trash"; do
+#     for j in $(find $i -maxdepth 1 -type d); do
+#         if [[ -d ${j} && -f ${j}/Cargo.toml && (! -d /tmp/${j}/target) ]]; then
+#             rm -rf ${j}/target /tmp/${j}/target
+#             mkdir -p /tmp/${j}/target || exit 1
+#             ln -sv /tmp/${j}/target ${j}/target || exit 1
+#         fi
+#     done
+# done
