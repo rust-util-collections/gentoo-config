@@ -1,5 +1,8 @@
-export LANG=en_US.UTF-8
+
+export LC_ALL=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
 
 # rust env
 source ~/.cargo/env
@@ -9,6 +12,10 @@ export CARGO_GIT_FETCH_WITH_CLI=true
 # export TENDERMINT_HOME=/data/...
 # export ROCKSDB_STATIC=1
 # export ROCKSDB_LIB_DIR=/usr/local/lib/
+
+# export ASC_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
+# export GSC_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
+# export FN_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
 
 # golang env
 export GO111MODULE=on
@@ -38,7 +45,7 @@ prompt clint
 # prompt redhat
 
 # 次提示符，显示当前有效用户身份及工作目录
-# RPROMPT="%F{magenta}%n@%~%f"
+# RPROMPT="%F{gray}%n@%~%f"
 
 # 忽略所有重复的历史记录
 setopt hist_ignore_all_dups

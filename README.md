@@ -123,3 +123,45 @@ enforce=none
 #### <11> Github/Google network settings
 
 [**World-wide network settings**](./github_google.md)
+
+#### <12> Major installing steps of the 'Gentoo Linux'
+
+```shell
+parted -a optimal /dev/...
+mkfs.vfat -F 32 ...
+mkfs.btrfs ...
+
+wget https://.../...stage3.tar.gz
+tar -xpf ...stage3.tar.gz
+
+chroot ...
+
+blkid >> /etc/fstab
+vi /etc/fstab
+
+mount -a
+
+# config and compile kernel
+make -jN
+make modules_install
+make install
+
+# initramfs
+dracut --hostonly --force
+
+grub-install --efi-directory=/boot/efi
+grub-mkconfig -o /boot/grub/grub.cfg
+
+vi /etc/portage/make.conf
+emerge-websync
+eselect profile set N
+
+emerge linux-firmware
+
+emerge dhcpcd
+systemctl enable dhcpcd
+
+passwd root
+
+reboot
+```
