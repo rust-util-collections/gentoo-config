@@ -517,32 +517,70 @@ fi
 # Link nvim as vim
 ln -sf /usr/bin/nvim /usr/local/bin/vim 2>/dev/null || true
 
-#--- Write /etc/motd ---
-info "[chroot] Writing /etc/motd..."
+#--- Write /etc/motd and /usr/local/etc/gentoo-tips ---
+info "[chroot] Writing /etc/motd and /usr/local/etc/gentoo-tips..."
 cat > /etc/motd << 'MOTD'
-
-==== Network Configuration (OpenRC + netifrc) ====
-
-  Config file: /etc/conf.d/net
-
-  DHCP:
-    config_eth0="dhcp"
-
-  Static:
-    config_eth0="192.168.1.100/24"
-    routes_eth0="default via 192.168.1.1"
-    dns_servers_eth0="8.8.8.8"
-
-  Apply changes:
-    rc-service net.<iface> restart
-
-  Add a new interface:
-    cd /etc/init.d && ln -sf net.lo net.<iface>
-    rc-update add net.<iface> default
-
-===================================================
-
+  Gentoo tips & cheatsheet: cat /usr/local/etc/gentoo-tips
 MOTD
+
+cat > /usr/local/etc/gentoo-tips << 'TIPS'
+=============== Gentoo Quick Reference ===============
+
+--- Network (OpenRC + netifrc) ---
+
+  Config:  /etc/conf.d/net
+
+  DHCP:    config_eth0="dhcp"
+  Static:  config_eth0="192.168.1.100/24"
+           routes_eth0="default via 192.168.1.1"
+           dns_servers_eth0="8.8.8.8"
+
+  Apply:   rc-service net.<iface> restart
+  Add if:  cd /etc/init.d && ln -sf net.lo net.<iface>
+           rc-update add net.<iface> default
+
+--- Package management ---
+
+  Search:          eix <keyword>
+  Install:         emerge -avq <pkg>
+  Uninstall:       emerge -avq --depclean <pkg>
+  Update world:    emerge -avquDN @world
+  Sync tree:       emerge --sync
+
+--- Dependency & reverse-dependency ---
+
+  Why installed:   equery depends <pkg>    (who depends on <pkg>)
+  Deps of pkg:     equery depgraph <pkg>   (what <pkg> depends on)
+  Dep tree:        emerge -avqp --tree <pkg>
+  Orphan pkgs:     emerge --depclean -p    (preview unused deps)
+  Clean orphans:   emerge --depclean
+
+--- USE flags ---
+
+  Active flags:    equery uses <pkg>
+  What uses flag:  equery hasuse <flag>
+  Per-pkg flags:   /etc/portage/package.use/
+
+--- Kernel ---
+
+  Rebuild:         cd /usr/src/linux && make -j$(nproc) && make modules_install && make install
+  Copy to EFI:     cp /boot/vmlinuz-* /boot/efi/EFI/gentoo/vmlinuz.efi
+  Module info:     modinfo <module>
+
+--- Services (OpenRC) ---
+
+  List:            rc-status
+  Start/stop:      rc-service <svc> start|stop|restart
+  Enable/disable:  rc-update add|del <svc> default
+
+--- Useful files ---
+
+  Portage config:  /etc/portage/make.conf
+  Installed pkgs:  /var/lib/portage/world
+  Build logs:      /var/tmp/portage/
+
+======================================================
+TIPS
 
 #--- Create dev directory for user ---
 mkdir -p "/home/${USER_NAME}/dev"
@@ -559,6 +597,7 @@ info "[chroot]  Gentoo installation complete!"
 info "[chroot]  Hostname : ${HOSTNAME}"
 info "[chroot]  SSH Port : ${SSH_PORT}"
 info "[chroot]  User     : ${USER_NAME}"
+info "[chroot]  Tips     : cat /usr/local/etc/gentoo-tips"
 info "[chroot] ========================================="
 CHROOT_SCRIPT
 
