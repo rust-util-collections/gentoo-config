@@ -1,8 +1,15 @@
 # gentoo-config
 
-Configuration files and one-click installation script for Gentoo Linux on AMD EPYC workstations.
+Configuration files and one-click installation scripts for Gentoo Linux on AMD EPYC workstations.
 
 ## One-click installation
+
+Two scripts are provided for different EPYC generations:
+
+| Script | Platform | Arch | Boot method |
+|--------|----------|------|-------------|
+| `install_gentoo_9004.sh` | EPYC 9004 (Genoa) / Supermicro H13SSL | znver4 | efibootmgr (no initramfs) |
+| `install_gentoo_7003.sh` | EPYC 7003 (Milan) / Supermicro H12SSL | znver3 | GRUB + dracut (initramfs required) |
 
 Boot from a Fedora/Ubuntu live USB, set up network, then:
 
@@ -14,7 +21,12 @@ git clone https://gitee.com/kt10/gentoo-config.git && cd gentoo-config
 export TARGET_DISK="/dev/sda"
 export ROOT_PASSWORD="your_root_password"
 export HOSTNAME="epyc"
-bash install_gentoo.sh
+
+# EPYC 9004 series (Genoa) / H13SSL:
+bash install_gentoo_9004.sh
+
+# EPYC 7003 series (Milan) / H12SSL:
+bash install_gentoo_7003.sh
 ```
 
 ### Optional environment variables
@@ -28,6 +40,7 @@ bash install_gentoo.sh
 | `EFI_SIZE` | `512M` | EFI partition size |
 | `USER_NAME` | `fh` | Non-root user to create |
 | `USER_PASSWORD` | *(same as ROOT_PASSWORD)* | Password for non-root user |
+| `JOBS` | *(auto-detect via nproc)* | Parallel build jobs |
 
 ## Directory structure
 

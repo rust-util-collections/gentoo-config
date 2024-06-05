@@ -1,6 +1,11 @@
 #!/bin/bash
 #
-# Gentoo Linux one-click installation script for AMD EPYC 9474F workstation
+# Gentoo Linux one-click installation script
+# Platform: AMD EPYC 7003 series (Milan, znver3) / Supermicro H12SSL
+#
+# NOTE: EPYC 7003 (Milan) requires initramfs to boot. This script uses
+#       dracut + GRUB for boot, unlike the 9004 script which boots directly
+#       via efibootmgr without initramfs.
 #
 # Usage:
 #   Boot from a Fedora/Ubuntu live USB, set up network, then run:
@@ -12,7 +17,7 @@
 #     export TARGET_DISK="/dev/sda"
 #     export ROOT_PASSWORD="your_root_password"
 #     export HOSTNAME="epyc"
-#     bash install_gentoo.sh
+#     bash install_gentoo_7003.sh
 #
 # Optional environment variables (with defaults):
 #     export GENTOO_MIRROR="https://mirrors.163.com/gentoo"
@@ -22,6 +27,7 @@
 #     export EFI_SIZE="512M"
 #     export USER_NAME="fh"        # non-root user to create
 #     export USER_PASSWORD=""       # password for non-root user, empty = same as ROOT_PASSWORD
+#     export JOBS=""                # parallel build jobs, empty = auto-detect (nproc)
 #
 
 set -euo pipefail
@@ -42,6 +48,7 @@ SSH_PORT="${SSH_PORT:-22}"
 EFI_SIZE="${EFI_SIZE:-512M}"
 USER_NAME="${USER_NAME:-fh}"
 USER_PASSWORD="${USER_PASSWORD:-${ROOT_PASSWORD}}"
+JOBS="${JOBS:-$(nproc)}"
 
 REPO_URL="https://gitee.com/kt10/gentoo-config.git"
 
@@ -60,7 +67,7 @@ if [[ ! -d "${SCRIPT_DIR}/.git" ]]; then
     SCRIPT_DIR="${CLONE_DIR}"
 fi
 
-KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel/EPYC_9474F_supermicro_h13_ssl___without_initramfs_without_netfilter"
+KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel/EPYC_7773x_supermicro_h12_ssl"
 
 # Detect disk type for partition naming (nvme vs sata/sas)
 if [[ "${TARGET_DISK}" == *"nvme"* ]]; then
@@ -92,6 +99,7 @@ info "Target disk: ${TARGET_DISK}"
 info "Hostname:    ${HOSTNAME}"
 info "Mirror:      ${GENTOO_MIRROR}"
 info "Timezone:    ${TIMEZONE}"
+info "Jobs:        ${JOBS}"
 echo ""
 warn "ALL DATA ON ${TARGET_DISK} WILL BE DESTROYED!"
 echo ""
@@ -171,14 +179,13 @@ rm -f "${STAGE3_FILE}"
 info "Step 5: Configuring make.conf..."
 
 cat > "${MOUNT_POINT}/etc/portage/make.conf" << 'MAKECONF'
-CFLAGS="-march=znver4 -O2 -pipe"
+CFLAGS="-march=znver3 -O2 -pipe"
 CXXFLAGS="${CFLAGS}"
-MAKEOPTS="-j96"
 CHOST="x86_64-pc-linux-gnu"
 
 USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs"
 
-CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq avx512bf16 f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
+CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
 
 FEATURES="splitdebug"
 
@@ -202,9 +209,12 @@ PORTAGE_ELOG_CLASSES="info warn error log qa"
 PORTAGE_ELOG_SYSTEM="save"
 MAKECONF
 
-# Set mirror (uses variable, so append separately)
-echo "" >> "${MOUNT_POINT}/etc/portage/make.conf"
-echo "GENTOO_MIRRORS=\"${GENTOO_MIRROR}\"" >> "${MOUNT_POINT}/etc/portage/make.conf"
+# Dynamic values (uses variables, so append separately)
+{
+    echo ""
+    echo "MAKEOPTS=\"-j${JOBS}\""
+    echo "GENTOO_MIRRORS=\"${GENTOO_MIRROR}\""
+} >> "${MOUNT_POINT}/etc/portage/make.conf"
 
 #######################################
 # Step 6: Configure DNS and chroot prep
@@ -295,6 +305,7 @@ USER_NAME="${USER_NAME}"
 USER_PASSWORD="${USER_PASSWORD}"
 EFI_PART="${EFI_PART}"
 TARGET_DISK="${TARGET_DISK}"
+JOBS="${JOBS}"
 
 #--- Reload environment ---
 info "[chroot] Reloading environment..."
@@ -354,47 +365,29 @@ else
     make defconfig
 fi
 
-info "[chroot] Building kernel with -j96..."
-make -j96
+info "[chroot] Building kernel with -j${JOBS}..."
+make -j${JOBS}
 make modules_install
 make install
 
-#--- efibootmgr (direct UEFI boot, no GRUB) ---
-info "[chroot] Configuring UEFI boot with efibootmgr..."
-emerge sys-boot/efibootmgr
+#--- Generate initramfs with dracut ---
+info "[chroot] Generating initramfs (required for EPYC 7003 to boot)..."
+emerge sys-kernel/dracut
 
-# Find the installed kernel image
 KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
-VMLINUZ="/boot/vmlinuz-${KERNEL_VERSION}"
-if [[ ! -f "${VMLINUZ}" ]]; then
-    VMLINUZ=$(find /boot -name 'vmlinuz-*' -type f | sort -V | tail -1)
-fi
+dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
+info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
 
-# Get the root partition UUID
-ROOT_UUID=$(grep -E '\s/\s' /etc/fstab | grep -oP 'UUID=\S+' | head -1)
+#--- Install and configure GRUB ---
+info "[chroot] Installing GRUB bootloader..."
+emerge sys-boot/grub
 
-# Copy kernel to EFI partition
-mkdir -p /boot/efi/EFI/gentoo
-cp "${VMLINUZ}" /boot/efi/EFI/gentoo/vmlinuz.efi
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
-# Determine the disk and partition number for efibootmgr
-EFI_DISK=$(echo "${EFI_PART}" | sed 's/p\?[0-9]*$//')
-EFI_PARTNUM=$(echo "${EFI_PART}" | grep -oP '[0-9]+$')
+# Generate GRUB config (auto-detects kernel + initramfs)
+grub-mkconfig -o /boot/grub/grub.cfg
 
-# Remove old Gentoo boot entries if any
-for bootnum in $(efibootmgr | grep -i gentoo | grep -oP 'Boot\K[0-9A-Fa-f]+'); do
-    efibootmgr -b "${bootnum}" -B 2>/dev/null || true
-done
-
-# Create new UEFI boot entry
-efibootmgr -c \
-    -d "${TARGET_DISK}" \
-    -p "${EFI_PARTNUM}" \
-    -L "Gentoo" \
-    -l "\\EFI\\gentoo\\vmlinuz.efi" \
-    -u "root=${ROOT_UUID} rootfstype=xfs ro"
-
-info "[chroot] UEFI boot entry created."
+info "[chroot] GRUB boot configured with initramfs."
 
 #--- Install essential packages ---
 info "[chroot] Installing essential packages..."
@@ -431,7 +424,7 @@ echo "hostname=\"${HOSTNAME}\"" > /etc/conf.d/hostname
 info "[chroot] Configuring network..."
 
 cat > /etc/conf.d/net << 'NETHEAD'
-# Auto-generated by install_gentoo.sh
+# Auto-generated by install_gentoo_7003.sh
 NETHEAD
 
 ALL_IFS=$(ls /sys/class/net/ 2>/dev/null | grep -vE '^lo$' | sort)
@@ -564,7 +557,9 @@ cat > /usr/local/etc/gentoo-tips << 'TIPS'
 --- Kernel ---
 
   Rebuild:         cd /usr/src/linux && make -j$(nproc) && make modules_install && make install
-  Copy to EFI:     cp /boot/vmlinuz-* /boot/efi/EFI/gentoo/vmlinuz.efi
+  Initramfs:       dracut --force /boot/initramfs-$(uname -r).img $(uname -r)
+  Update GRUB:     grub-mkconfig -o /boot/grub/grub.cfg
+  Copy to EFI:     (handled by GRUB, no manual copy needed)
   Module info:     modinfo <module>
 
 --- Services (OpenRC) ---
@@ -597,6 +592,7 @@ info "[chroot]  Gentoo installation complete!"
 info "[chroot]  Hostname : ${HOSTNAME}"
 info "[chroot]  SSH Port : ${SSH_PORT}"
 info "[chroot]  User     : ${USER_NAME}"
+info "[chroot]  Boot     : GRUB + initramfs"
 info "[chroot]  Tips     : cat /usr/local/etc/gentoo-tips"
 info "[chroot] ========================================="
 CHROOT_SCRIPT
@@ -617,6 +613,7 @@ chroot "${MOUNT_POINT}" /bin/bash -c "
     export USER_PASSWORD='${USER_PASSWORD}'
     export EFI_PART='${EFI_PART}'
     export TARGET_DISK='${TARGET_DISK}'
+    export JOBS='${JOBS}'
     /tmp/chroot_install.sh
 "
 
