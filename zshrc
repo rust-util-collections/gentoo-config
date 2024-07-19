@@ -1,3 +1,4 @@
+cd ~/__dev__
 
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
@@ -13,15 +14,29 @@ export CARGO_GIT_FETCH_WITH_CLI=true
 # export ROCKSDB_STATIC=1
 # export ROCKSDB_LIB_DIR=/usr/local/lib/
 
-# export ASC_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
-# export GSC_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
-# export FN_DDEV_HOSTS="192.168.2.42,192.168.2.52,192.168.2.101"
+# export DS_DDEV_HOSTS="
+# 10.100.131.28|54.212.29.192#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.138.125|34.219.64.79#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.139.213|54.185.61.205#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.156.209|34.220.39.178#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.156.147|18.236.194.97#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.151.163|54.213.244.105#ubuntu#22#1#/home/fh/ds.pem
+# "
+# export DS_DDEV_HOSTS="
+# 10.100.132.40|35.92.45.246#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.133.112|34.217.79.8#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.128.167|35.91.19.115#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.129.230|54.187.129.237#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.143.9|35.92.131.136#ubuntu#22#1#/home/fh/ds.pem,
+# 10.100.138.41|34.219.61.94#ubuntu#22#1#/home/fh/ds.pem
+# "
 
 # golang env
-export GO111MODULE=on
-export GOPROXY=https://goproxy.cn
+# export GO111MODULE=on
+# export GOPROXY=https://goproxy.cn
 
-export PATH=~/cargo/bin:~/go/bin:$PATH
+PATH=~/cargo/bin:~/go/bin:$PATH
+export PATH=${PATH#*:$HOME/.cargo/bin:$HOME/.cargo/bin:}
 
 export HISTSIZE=2000
 export HISTFILE="$HOME/.history"
@@ -58,7 +73,12 @@ alias .="source"
 alias h="history 1"
 
 alias top="htop"
-alias sensors="sensors 2>/dev/null"
+alias sensors="sensors | grep -A 5 k10temp 2>/dev/null"
+
+alias sj="ssh fh@192.168.0.100"
+alias sh="ssh fh@192.168.0.101"
+alias sk="ssh fh@192.168.0.102"
+alias sl="ssh fh@192.168.0.103"
 
 # for i in "${HOME}" "${HOME}/trash"; do
 #     for j in $(find $i -maxdepth 1 -type d); do
