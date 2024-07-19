@@ -1,4 +1,4 @@
-cd ~/__dev__
+cd ~/_dev_
 
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
@@ -57,6 +57,8 @@ autoload -U promptinit
 promptinit
 # 比较悦目的主题还有：gentoo、walters、adam2 等
 prompt clint
+PROMPT="%F{red}[%F{green}%n@%m%F{white}:%F{yellow}%~%F{red}]
+%fzsh%(2L./1.) %B%h%b %(?..[%?%1v] )%(2v.%U%2v%u.)%f%B%#%b "
 # prompt redhat
 
 # 次提示符，显示当前有效用户身份及工作目录
