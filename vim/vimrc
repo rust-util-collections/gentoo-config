@@ -24,61 +24,19 @@ set selectmode=mouse,key      "启动选择模式的方式
 set noswapfile                "关闭交换文件
 set hidden                    "允许在有未保存的修改时切换缓冲区
 
-"显示
+""显示
 set background=dark
+"set background=light
 
-colorscheme solarized         "选择配色方案
-"colorscheme anderson
-"colorscheme angr
-"colorscheme apprentice
-"colorscheme ayu
-"colorscheme bergen
-"colorscheme breezy-fall
-"colorscheme carbonized-dark
-"colorscheme carbonized-light
-"colorscheme colorsbox-faff
-"colorscheme colorsbox-greenish
-"colorscheme colorsbox-material
-"colorscheme colorsbox-stblue
-"colorscheme colorsbox-stbright
-"colorscheme colorsbox-steighties
-"colorscheme colorsbox-stnight
-"colorscheme darktooth
-"colorscheme desert
-"colorscheme deus
-"colorscheme flattened_dark
-"colorscheme flattened_light
-"colorscheme foggy-night
-"colorscheme Greymatters
-"colorscheme gruvbox
-"colorscheme hybrid
-"colorscheme light-kiss
-"colorscheme lucius
-"colorscheme madrid
-"colorscheme metalheart
-"colorscheme minimalist
-"colorscheme munich
-"colorscheme nord
-"colorscheme oceanic_material
-"colorscheme Oldlace
-"colorscheme onedark
-"colorscheme one
-"colorscheme PaperColor
-"colorscheme pyte
-"colorscheme rdark-terminal2
-"colorscheme reykjavik
-"colorscheme silkworm
-"colorscheme soft-charcoal
-"colorscheme soft-morning
-"colorscheme soft-stone
-"colorscheme solarized
+""选择配色方案
+colorscheme apprentice        " Nice dark theme!
+"colorscheme pyte              " Nice light theme, simple style!
+"colorscheme solarized         " Nice!
 "colorscheme space-vim-dark
-"colorscheme sunny-day
-"colorscheme Thursday
-"colorscheme warm-night
-"colorscheme white-sand
+"colorscheme anderson
+"colorscheme PaperColor
 
-set t_Co=256                  "可以使用的颜色数目
+set t_Co=65536                  "可以使用的颜色数目
 set number                    "显示行号
 set laststatus=2              "显示状态行
 set ruler                     "显示标尺
