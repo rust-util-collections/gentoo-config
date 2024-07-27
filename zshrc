@@ -1,4 +1,19 @@
-cd ~/_dev_
+
+alias sj="ssh fh@192.168.0.100"
+alias sh="ssh fh@192.168.0.101"
+alias sk="ssh fh@192.168.0.102"
+alias sl="ssh fh@192.168.0.103"
+
+alias top="htop"
+alias sensors="sensors | grep -A 5 k10temp 2>/dev/null"
+
+alias ls="ls -F --color=always"
+alias ll="ls -sailF"
+alias .="source"
+alias h="history 1"
+
+alias c="cd ~/.dev"
+c
 
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
@@ -68,19 +83,6 @@ PROMPT="%F{red}[%F{green}%n@%m%F{white}:%F{yellow}%~%F{red}]
 setopt hist_ignore_all_dups
 
 set -o vi
-
-alias ls="ls -F --color=always"
-alias ll="ls -sailF"
-alias .="source"
-alias h="history 1"
-
-alias top="htop"
-alias sensors="sensors | grep -A 5 k10temp 2>/dev/null"
-
-alias sj="ssh fh@192.168.0.100"
-alias sh="ssh fh@192.168.0.101"
-alias sk="ssh fh@192.168.0.102"
-alias sl="ssh fh@192.168.0.103"
 
 # for i in "${HOME}" "${HOME}/trash"; do
 #     for j in $(find $i -maxdepth 1 -type d); do
