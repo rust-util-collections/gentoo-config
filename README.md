@@ -146,8 +146,8 @@ make -jN
 make modules_install
 make install
 
-# initramfs
-dracut --hostonly --force
+# # initramfs
+# dracut --hostonly --force
 
 grub-install --efi-directory=/boot/efi
 grub-mkconfig -o /boot/grub/grub.cfg
@@ -164,4 +164,8 @@ systemctl enable dhcpcd
 passwd root
 
 reboot
+
+# if reboot failed, try remove the initramfs file,
+# and `grub-mkconfig -o /boot/grub/grub.cfg`;
+# if this works, then `emerge -C installkernel` is a good idea.
 ```
