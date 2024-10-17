@@ -120,11 +120,30 @@ export RUSTFLAGS="-C target-feature=-crt-static"
 enforce=none
 ```
 
-#### <11> Github/Google network settings
+#### <11> Docker modulers on gentoo
+
+```shell
+modprobe tun
+
+modprobe br_netfilter
+modprobe iptable_filter
+
+modprobe nf_nat
+modprobe iptable_nat
+modprobe xt_nat
+
+modprobe nf_conntrack
+modprobe xt_conntrack
+
+modprobe xt_MASQUERADE
+modprobe xt_addrtype
+```
+
+#### <12> Github/Google network settings
 
 [**World-wide network settings**](./github_google.md)
 
-#### <12> Major installing steps of the 'Gentoo Linux'
+#### <13> Major installing steps of the 'Gentoo Linux'
 
 ```shell
 parted -a optimal /dev/...
