@@ -124,6 +124,7 @@ enforce=none
 
 ```shell
 modprobe tun
+modprobe veth
 
 modprobe br_netfilter
 modprobe iptable_filter
