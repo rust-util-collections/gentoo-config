@@ -123,6 +123,9 @@ enforce=none
 #### <11> Docker modulers on gentoo
 
 ```shell
+# `/etc/local.d/modprobe.start`,
+# auto-generated as `gentoo-local-modprobe.service`
+
 modprobe tun
 modprobe veth
 
@@ -138,6 +141,14 @@ modprobe xt_conntrack
 
 modprobe xt_MASQUERADE
 modprobe xt_addrtype
+```
+
+```
+# /lib/systemd/system/docker.service
+[Unit]
+...........
+Requires=docker.socket gentoo-local-modprobe.service
+...........
 ```
 
 #### <12> Github/Google network settings
