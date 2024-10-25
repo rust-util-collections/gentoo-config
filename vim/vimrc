@@ -29,9 +29,9 @@ set background=dark
 "set background=light
 
 ""选择配色方案
-colorscheme apprentice        " Nice dark theme!
+"colorscheme apprentice        " Nice dark theme!
 "colorscheme pyte              " Nice light theme, simple style!
-"colorscheme solarized         " Nice!
+colorscheme solarized         " Nice!
 "colorscheme space-vim-dark
 "colorscheme anderson
 "colorscheme PaperColor
@@ -154,19 +154,22 @@ let g:tagbar_autofocus=1
 nnoremap <F4> :TagbarToggle<CR>
 
 "-----YouCompleteMe-----
+set completeopt-=preview
 let g:ycm_server_python_interpreter= '/usr/bin/python3'
 let g:ycm_python_binary_path = '/usr/bin/python3'
 let g:ycm_global_ycm_extra_conf = '~/.ycm_extra_conf.py' "默认配置文件
 "let g:ycm_key_invoke_completion = '<C-Tab>'        "跨文件补全
 let g:ycm_confirm_extra_conf = 0                    "关闭加载配置文件提示
-let g:ycm_cache_omnifunc = 0                        "关闭补全缓存
+let g:ycm_cache_omnifunc = 1                        "关闭补全缓存
 let g:ycm_enable_diagnostic_signs = 0              "关闭诊断提示符
-"let g:ycm_enable_diagnostic_highlighting = 1       "关闭诊断高亮
+let g:ycm_enable_diagnostic_highlighting = 1       "关闭诊断高亮
 "let g:ycm_echo_current_diagnostic = 1
+let b:ycm_hover = ''
 let g:ycm_auto_hover = -1                           "关闭自动显示所在行的文档
 let g:ycm_hover_popup = -1                          "关闭自动弹窗显示所在行的文档
-"let g:ycm_show_diagnostics_ui = 0                   "关闭诊断ui
-let g:ycm_min_num_of_chars_for_completion = 2       "n字符开始自动补全
+let g:ycm_show_diagnostics_ui = -1                 "关闭诊断ui
+let g:ycm_min_num_of_chars_for_completion = 2      "n字符开始自动补全
+" let g:ycm_rust_toolchain_root = '/home/fh/.rustup'
 
 "跳转至定义或声明处
 nnoremap <Leader>d :YcmCompleter GoToDefinitionElseDeclaration<CR>
