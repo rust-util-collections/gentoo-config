@@ -54,6 +54,11 @@ enforce = none
 - [**/usr/x86_64-unknown-linux-musl/etc/portage/make.conf**](usr_x86_64-unknown-linux-musl_etc_portage_make.conf)
 
 ```shell
+emerge -avq crossdev
+
+PORTAGE_CONFIGROOT=/usr/x86_64-unknown-linux-musl eselect profile list
+PORTAGE_CONFIGROOT=/usr/x86_64-unknown-linux-musl eselect profile set XXX
+
 mkdir -p /var/db/repos/crossdev/{profiles,metadata}
 echo 'crossdev' > /var/db/repos/crossdev/profiles/repo_name
 echo 'masters = gentoo' > /var/db/repos/crossdev/metadata/layout.conf
