@@ -2,20 +2,7 @@
 
 #### <1> VIM nerd_tree 侧栏乱码问题:
 
-```shell
-#
-# 注释掉不能显示的富文本字体
-# vim /usr/local/share/vim/vim74/plugin/NERD_tree.vim
-#
-
-"if !nerdtree#runningWindows() && !nerdtree#runningCygwin()
-"    call s:initVariable('g:NERDTreeDirArrowExpandable', '▸')
-"    call s:initVariable('g:NERDTreeDirArrowCollapsible', '▾')
-"else
-    call s:initVariable('g:NERDTreeDirArrowExpandable', '+')
-    call s:initVariable('g:NERDTreeDirArrowCollapsible', '~')
-"endif
-```
+outdated!
 
 #### <2> 禁用 ubuntu Dock 栏
 
@@ -77,23 +64,7 @@ CHOST=x86_64-unknown-linux-musl cross-emerge -avq openssl net-misc/curl
 
 #### <6> YouCompleteMe on Alpine(musl)
 
-Issue (`install.py --rust-completer --go-completer`):
-
-```shell
-/home/fh/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/absl/absl/base/internal/spinlock_linux.inc:17:10: fatal error: linux/futex.h: No such file or directory
-   17 | #include <linux/futex.h>
-      |          ^~~~~~~~~~~~~~~
-compilation terminated.
-make[3]: *** [absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/build.make:76: absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/internal/spinlock_wait.cc.o] Error 1
-make[2]: *** [CMakeFiles/Makefile2:602: absl/absl/base/CMakeFiles/absl_spinlock_wait.dir/all] Error 2
-make[2]: *** Waiting for unfinished jobs....
-```
-
-Solution:
-
-```shell
-apk add linux-headers
-```
+outdated!
 
 #### <7> Clean unneed packages on opensuse
 
