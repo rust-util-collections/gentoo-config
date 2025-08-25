@@ -186,8 +186,8 @@ lua <<EOF
     local opts = { noremap=true, silent=true, buffer=bufnr }
 
     -- 设置快捷键 <leader>d 来跳转到定义
-    vim.keymap.set('n', 'fd', vim.lsp.buf.definition, opts)
     -- vim.keymap.set('n', '<leader>d', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', ';;', vim.lsp.buf.definition, opts)
   end
 
   -- 为 rust_analyzer 设置 LSP
@@ -239,6 +239,5 @@ nnoremap <F3> :NvimTreeToggle<CR>
 "nnoremap <Leader>o :NERDTreeFind<CR>
 
 " 使用 Command+O (通过 Alt 信号) 返回上一个位置
-nnoremap <M-o> <C-o>
-" 或者使用 <A-o>，它和 <M-o> 是等效的
-" nnoremap <A-o> <C-o>
+nnoremap <S-o> <C-o>
+nnoremap <S-i> <C-i>
