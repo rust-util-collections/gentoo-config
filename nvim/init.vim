@@ -102,7 +102,7 @@ call plug#end()
 ""配色方案
 set termguicolors
 set background=dark " or `'light'`
-let g:everforest_background = 'medium' "Available values:   `'hard'`, `'medium'`, `'soft'`
+let g:everforest_background = 'hard' "Available values:   `'hard'`, `'medium'`, `'soft'`
 let g:everforest_better_performance = 1
 colorscheme everforest
 let g:lightline = {'colorscheme' : 'everforest'}
@@ -186,7 +186,8 @@ lua <<EOF
     local opts = { noremap=true, silent=true, buffer=bufnr }
 
     -- 设置快捷键 <leader>d 来跳转到定义
-    vim.keymap.set('n', '<leader>d', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'fd', vim.lsp.buf.definition, opts)
+    -- vim.keymap.set('n', '<leader>d', vim.lsp.buf.definition, opts)
   end
 
   -- 为 rust_analyzer 设置 LSP
@@ -201,9 +202,6 @@ lua <<EOF
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
--- empty setup using defaults
-require("nvim-tree").setup()
-
 -- OR setup with some options
 require("nvim-tree").setup({
   sort = {
@@ -211,6 +209,7 @@ require("nvim-tree").setup({
   },
   view = {
     width = 28,
+    side = "left",
   },
   renderer = {
     group_empty = true,
@@ -238,3 +237,8 @@ EOF
 "-----NvimTree-----
 nnoremap <F3> :NvimTreeToggle<CR> 
 "nnoremap <Leader>o :NERDTreeFind<CR>
+
+" 使用 Command+O (通过 Alt 信号) 返回上一个位置
+nnoremap <M-o> <C-o>
+" 或者使用 <A-o>，它和 <M-o> 是等效的
+" nnoremap <A-o> <C-o>
