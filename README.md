@@ -1,8 +1,11 @@
 # gentoo-config
 
-#### <1> VIM nerd_tree 侧栏乱码问题:
+#### <1> NVIM Rust&Golang
 
-outdated!
+```
+rustup component add rust-analyzer
+go install golang.org/x/tools/gopls@latest
+```
 
 #### <2> 禁用 ubuntu Dock 栏
 
