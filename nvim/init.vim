@@ -1,4 +1,3 @@
-
 "===================通用配置======================
 set encoding=utf-8
 
@@ -32,7 +31,7 @@ set ruler                     "显示标尺
 set showcmd                   "显示输入的命令
 set showmatch                 "高亮括号匹配
 set matchtime=1               "匹配括号高亮的时间(十分之一秒)
-set matchpairs={:},(:),[:],<:>        "匹配括号"{}""()"...等    
+set matchpairs={:},(:),[:],<:>        "匹配括号"{}"()"...等    
 set hlsearch                  "检索时高亮匹配项
 set incsearch                 "边检索边显示匹配
 
@@ -81,6 +80,9 @@ Plug 'hrsh7th/nvim-cmp'
 Plug 'hrsh7th/cmp-vsnip'
 Plug 'hrsh7th/vim-vsnip'
 
+" Treesitter for better syntax highlighting
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
 " For luasnip users.
 " Plug 'L3MON4D3/LuaSnip'
 " Plug 'saadparwaiz1/cmp_luasnip'
@@ -101,8 +103,8 @@ call plug#end()
 
 ""配色方案
 set termguicolors
-set background=dark " or `'light'`
-let g:everforest_background = 'hard' "Available values:   `'hard'`, `'medium'`, `'soft'`
+set background=dark
+let g:everforest_background = 'medium' "Available values:   `'hard'`, `'medium'`, `'soft'`
 let g:everforest_better_performance = 1
 colorscheme everforest
 let g:lightline = {'colorscheme' : 'everforest'}
@@ -149,7 +151,6 @@ lua <<EOF
   })
 
   -- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
-  -- Set configuration for specific filetype.
   --[[ cmp.setup.filetype('gitcommit', {
     sources = cmp.config.sources({
       { name = 'git' },
@@ -195,6 +196,12 @@ lua <<EOF
     capabilities = capabilities,
     on_attach = on_attach, -- 将 on_attach 函数传递给 setup
   }
+
+  -- 为 gopls (Go) 设置 LSP
+  require('lspconfig').gopls.setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
+  }
 EOF
 
 lua <<EOF
@@ -208,7 +215,7 @@ require("nvim-tree").setup({
     sorter = "case_sensitive",
   },
   view = {
-    width = 28,
+    width = 26,
     side = "left",
   },
   renderer = {
@@ -238,6 +245,19 @@ EOF
 nnoremap <F3> :NvimTreeToggle<CR> 
 "nnoremap <Leader>o :NERDTreeFind<CR>
 
-" 使用 Command+O (通过 Alt 信号) 返回上一个位置
-nnoremap <S-o> <C-o>
-nnoremap <S-i> <C-i>
+"===================Treesitter 配置======================
+lua <<EOF
+require'nvim-treesitter.configs'.setup {
+  -- 确保 go, lua, vim 的解析器已安装
+  ensure_installed = { "go", "lua", "vim" },
+
+  -- 启用语法高亮
+  highlight = {
+    enable = true,
+  },
+}
+EOF
+
+"===================Go 特定配置======================
+" 保存 Go 文件时自动格式化
+autocmd BufWritePre *.go lua vim.lsp.buf.format({ async = true })
