@@ -1,10 +1,14 @@
 # gentoo-config
 
-#### <1> NVIM Rust&Golang
+#### <1> NVIM Rust+Golang+Python
 
 ```
 rustup component add rust-analyzer
+
 go install golang.org/x/tools/gopls@latest
+
+npm install -g pyright
+
 ```
 
 #### <2> 禁用 ubuntu Dock 栏

@@ -202,6 +202,12 @@ lua <<EOF
     capabilities = capabilities,
     on_attach = on_attach,
   }
+
+  -- 为 pyright (Python) 设置 LSP
+  require('lspconfig').pyright.setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
+  }
 EOF
 
 lua <<EOF
@@ -248,8 +254,8 @@ nnoremap <F3> :NvimTreeToggle<CR>
 "===================Treesitter 配置======================
 lua <<EOF
 require'nvim-treesitter.configs'.setup {
-  -- 确保 go, lua, vim 的解析器已安装
-  ensure_installed = { "go", "lua", "vim" },
+  -- 确保 go, lua, vim, python 的解析器已安装
+  ensure_installed = { "go", "lua", "vim", "python" },
 
   -- 启用语法高亮
   highlight = {
@@ -261,3 +267,7 @@ EOF
 "===================Go 特定配置======================
 " 保存 Go 文件时自动格式化
 autocmd BufWritePre *.go lua vim.lsp.buf.format({ async = true })
+
+"===================Python 特定配置======================
+" 保存 Python 文件时自动格式化
+autocmd BufWritePre *.py lua vim.lsp.buf.format({ async = true })
