@@ -179,9 +179,9 @@ lua <<EOF
   --   matching = { disallow_symbol_nonprefix_matching = false }
   -- })
 
-  -- Set up lspconfig.
+  -- Set up lspconfig using new vim.lsp.config API
   local capabilities = require('cmp_nvim_lsp').default_capabilities()
-  
+
   -- 定义 on_attach 函数，在这里设置 LSP 快捷键
   local on_attach = function(client, bufnr)
     local opts = { noremap=true, silent=true, buffer=bufnr }
@@ -191,23 +191,32 @@ lua <<EOF
     vim.keymap.set('n', ';;', vim.lsp.buf.definition, opts)
   end
 
-  -- 为 rust_analyzer 设置 LSP
-  require('lspconfig').rust_analyzer.setup {
-    capabilities = capabilities,
-    on_attach = on_attach, -- 将 on_attach 函数传递给 setup
-  }
-
-  -- 为 gopls (Go) 设置 LSP
-  require('lspconfig').gopls.setup {
+  -- 为 rust_analyzer 设置 LSP (使用新的 vim.lsp.config API)
+  vim.lsp.config.rust_analyzer = {
+    cmd = { 'rust-analyzer' },
+    root_markers = { 'Cargo.toml' },
     capabilities = capabilities,
     on_attach = on_attach,
   }
+  vim.lsp.enable('rust_analyzer')
+
+  -- 为 gopls (Go) 设置 LSP (使用新的 vim.lsp.config API)
+  vim.lsp.config.gopls = {
+    cmd = { 'gopls' },
+    root_markers = { 'go.mod', 'go.work' },
+    capabilities = capabilities,
+    on_attach = on_attach,
+  }
+  vim.lsp.enable('gopls')
 
   -- 为 pyright (Python) 设置 LSP
-  require('lspconfig').pyright.setup {
+  vim.lsp.config.pyright = {
+    cmd = { 'pyright' },
+    root_markers = { 'pyproject.toml', 'setup.py', 'requirements.txt' },
     capabilities = capabilities,
     on_attach = on_attach,
   }
+  vim.lsp.enable('pyright')
 EOF
 
 lua <<EOF
@@ -221,7 +230,7 @@ require("nvim-tree").setup({
     sorter = "case_sensitive",
   },
   view = {
-    width = 26,
+    width = 24,
     side = "left",
   },
   renderer = {
