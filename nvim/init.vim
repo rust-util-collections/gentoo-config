@@ -106,108 +106,135 @@ set termguicolors
 set background=dark
 let g:everforest_background = 'medium' "Available values:   `'hard'`, `'medium'`, `'soft'`
 let g:everforest_better_performance = 1
-colorscheme everforest
+try
+  colorscheme everforest
+catch
+  colorscheme default
+endtry
 let g:lightline = {'colorscheme' : 'everforest'}
 
 lua <<EOF
+  -- Safe require utility to prevent crashes on first install
+  local function safe_require(module)
+    local status_ok, loaded_module = pcall(require, module)
+    if not status_ok then
+      return nil
+    end
+    return loaded_module
+  end
+
   -- Set up nvim-cmp.
-  local cmp = require'cmp'
+  local cmp = safe_require('cmp')
+  if cmp then
+      cmp.setup({
+        snippet = {
+          expand = function(args) 
+            vim.fn["vsnip#anonymous"](args.body)
+          end,
+        },
+        window = {
+          documentation = false,
+        },
+        mapping = {
+          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
+          ["<Tab>"] = cmp.mapping(function(fallback) 
+            if cmp.visible() then
+              local entries = cmp.get_entries()
+              if #entries == 1 then
+                cmp.confirm({ select = true })
+              else
+                cmp.select_next_item()
+              end
+            elseif vim.fn["vsnip#available"](1) == 1 then
+              vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Plug>(vsnip-expand-or-jump)", true, true, true), "m", true)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+          ['<C-e>'] = cmp.mapping.abort(),
+          ['<C-Space>'] = cmp.mapping.complete(),
+        },
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'vsnip' },
+        }, {
+          { name = 'buffer' },
+        })
+      })
 
-  cmp.setup({
-    snippet = {
-      expand = function(args)
-        vim.fn["vsnip#anonymous"](args.body)
-      end,
-    },
-    window = {
-      documentation = false,
-    },
-    mapping = {
-      ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-      ["<Tab>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          local entries = cmp.get_entries()
-          if #entries == 1 then
-            cmp.confirm({ select = true })
-          else
-            cmp.select_next_item()
-          end
-        elseif vim.fn["vsnip#available"](1) == 1 then
-          vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Plug>(vsnip-expand-or-jump)", true, true, true), "m", true)
-        else
-          fallback()
-        end
-      end, { "i", "s" }),
-      ['<CR>'] = cmp.mapping.confirm({ select = true }),
-      ['<C-e>'] = cmp.mapping.abort(),
-      ['<C-Space>'] = cmp.mapping.complete(),
-    },
-    sources = cmp.config.sources({
-      { name = 'nvim_lsp' },
-      { name = 'vsnip' },
-    }, {
-      { name = 'buffer' },
-    })
-  })
+      -- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
+      --[[ cmp.setup.filetype('gitcommit', {
+        sources = cmp.config.sources({
+          { name = 'git' },
+        }, {
+          { name = 'buffer' },
+        })
+     })
+     require("cmp_git").setup() ]]-- 
 
-  -- To use git you need to install the plugin petertriho/cmp-git and uncomment lines below
-  --[[ cmp.setup.filetype('gitcommit', {
-    sources = cmp.config.sources({
-      { name = 'git' },
-    }, {
-      { name = 'buffer' },
-    })
- })
- require("cmp_git").setup() ]]-- 
-
-  -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
-  cmp.setup.cmdline({ '/', '?' }, {
-    mapping = cmp.mapping.preset.cmdline(),
-    sources = {
-      { name = 'buffer' }
-    }
-  })
-
-  -- -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
-  -- cmp.setup.cmdline(':', {
-  --   mapping = cmp.mapping.preset.cmdline(),
-  --   sources = cmp.config.sources({
-  --     { name = 'path' }
-  --   }, {
-  --     { name = 'cmdline' }
-  --   }),
-  --   matching = { disallow_symbol_nonprefix_matching = false }
-  -- })
+      -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+      cmp.setup.cmdline({ '/', '?' }, {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = {
+          { name = 'buffer' }
+        }
+      })
+  end
 
   -- Set up lspconfig.
-  local capabilities = require('cmp_nvim_lsp').default_capabilities()
+  local cmp_nvim_lsp = safe_require('cmp_nvim_lsp')
+  local capabilities = cmp_nvim_lsp and cmp_nvim_lsp.default_capabilities() or vim.lsp.protocol.make_client_capabilities()
   
   -- 定义 on_attach 函数，在这里设置 LSP 快捷键
-  local on_attach = function(client, bufnr)
-    local opts = { noremap=true, silent=true, buffer=bufnr }
+  local on_attach = function(client, bufnr) 
+    local opts = { noremap=true, silent=true, buffer=bufnr } 
 
     -- 设置快捷键 <leader>d 来跳转到定义
     -- vim.keymap.set('n', '<leader>d', vim.lsp.buf.definition, opts)
     vim.keymap.set('n', ';;', vim.lsp.buf.definition, opts)
   end
 
-  -- 为 rust_analyzer 设置 LSP
-  require('lspconfig').rust_analyzer.setup {
-    capabilities = capabilities,
-    on_attach = on_attach, -- 将 on_attach 函数传递给 setup
-  }
+  -- Configure and enable LSP servers (Nvim 0.11+ style)
+  if vim.lsp.config and vim.lsp.enable then
+      -- rust_analyzer
+      vim.lsp.config('rust_analyzer', {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      })
+      vim.lsp.enable('rust_analyzer')
 
-  -- 为 gopls (Go) 设置 LSP
-  require('lspconfig').gopls.setup {
-    capabilities = capabilities,
-    on_attach = on_attach,
-  }
+      -- gopls (Go)
+      vim.lsp.config('gopls', {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      })
+      vim.lsp.enable('gopls')
 
-  -- 为 pyright (Python) 设置 LSP
-  require('lspconfig').pyright.setup {
-    capabilities = capabilities,
-    on_attach = on_attach,
-  }
+      -- pyright (Python)
+      vim.lsp.config('pyright', {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      })
+      vim.lsp.enable('pyright')
+  else
+      -- Fallback for older Neovim versions (though this config is mainly for 0.11+)
+      local lspconfig = safe_require('lspconfig')
+      if lspconfig then
+          lspconfig.rust_analyzer.setup {
+            capabilities = capabilities,
+            on_attach = on_attach,
+          }
+          lspconfig.gopls.setup {
+            capabilities = capabilities,
+            on_attach = on_attach,
+          }
+          lspconfig.pyright.setup {
+            capabilities = capabilities,
+            on_attach = on_attach,
+          }
+      end
+  end
 EOF
 
 lua <<EOF
@@ -216,34 +243,37 @@ vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
 -- OR setup with some options
-require("nvim-tree").setup({
-  sort = {
-    sorter = "case_sensitive",
-  },
-  view = {
-    width = 26,
-    side = "left",
-  },
-  renderer = {
-    group_empty = true,
-    icons = {
-      show = {
-        file = false,          -- 不显示文件图标
-        folder = false,        -- 不显示文件夹图标
-        git = false,           -- 不显示 git 状态图标
+local status_tree, nvim_tree = pcall(require, "nvim-tree")
+if status_tree then
+    nvim_tree.setup({
+      sort = {
+        sorter = "case_sensitive",
       },
-      glyphs = {
-        folder = {
-          arrow_closed = "+", -- 闭合文件夹
-          arrow_open = "-",   -- 展开文件夹
-        }
-      }
-    },
-  },
-  filters = {
-    dotfiles = true,
-  },
-})
+      view = {
+        width = 26,
+        side = "left",
+      },
+      renderer = {
+        group_empty = true,
+        icons = {
+          show = {
+            file = false,          -- 不显示文件图标
+            folder = false,        -- 不显示文件夹图标
+            git = false,           -- 不显示 git 状态图标
+          },
+          glyphs = {
+            folder = {
+              arrow_closed = "+", -- 闭合文件夹
+              arrow_open = "-",   -- 展开文件夹
+            }
+          }
+        },
+      },
+      filters = {
+        dotfiles = true,
+      },
+    })
+end
 EOF
 
 
@@ -253,15 +283,22 @@ nnoremap <F3> :NvimTreeToggle<CR>
 
 "===================Treesitter 配置======================
 lua <<EOF
-require'nvim-treesitter.configs'.setup {
-  -- 确保 go, lua, vim, python 的解析器已安装
-  ensure_installed = { "go", "lua", "vim", "python" },
+local status_ts, configs = pcall(require, "nvim-treesitter.configs")
+if not status_ts then
+    status_ts, configs = pcall(require, "nvim-treesitter.config")
+end
 
-  -- 启用语法高亮
-  highlight = {
-    enable = true,
-  },
-}
+if status_ts then
+    configs.setup {
+      -- 确保 go, lua, vim, python 的解析器已安装
+      ensure_installed = { "go", "lua", "vim", "python" },
+
+      -- 启用语法高亮
+      highlight = {
+        enable = true,
+      },
+    }
+end
 EOF
 
 "===================Go 特定配置======================
