@@ -272,9 +272,19 @@ if [[ -f "${SCRIPT_DIR}/nvim/init.vim" ]]; then
 fi
 
 #######################################
-# Step 10: Copy zshrc files
+# Step 10: Copy htop config
 #######################################
-info "Step 10: Copying zshrc files..."
+info "Step 10: Copying htop config..."
+
+if [[ -f "${SCRIPT_DIR}/htop/htoprc" ]]; then
+    mkdir -p "${MOUNT_POINT}/tmp/gentoo_setup_files"
+    cp "${SCRIPT_DIR}/htop/htoprc" "${MOUNT_POINT}/tmp/gentoo_setup_files/"
+fi
+
+#######################################
+# Step 11: Copy zshrc files
+#######################################
+info "Step 11: Copying zshrc files..."
 
 if [[ -f "${SCRIPT_DIR}/shell/zshrc" ]]; then
     cp "${SCRIPT_DIR}/shell/zshrc" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc"
@@ -284,9 +294,9 @@ if [[ -f "${SCRIPT_DIR}/shell/zshrc_root" ]]; then
 fi
 
 #######################################
-# Step 11: Create chroot script
+# Step 12: Create chroot script
 #######################################
-info "Step 11: Creating chroot installation script..."
+info "Step 12: Creating chroot installation script..."
 
 cat > "${MOUNT_POINT}/tmp/chroot_install.sh" << 'CHROOT_SCRIPT'
 #!/bin/bash
@@ -510,6 +520,16 @@ fi
 # Link nvim as vim
 ln -sf /usr/bin/nvim /usr/local/bin/vim 2>/dev/null || true
 
+#--- Deploy htop config ---
+info "[chroot] Deploying htop config..."
+if [[ -f /tmp/gentoo_setup_files/htoprc ]]; then
+    mkdir -p /root/.config/htop
+    mkdir -p "/home/${USER_NAME}/.config/htop"
+    cp /tmp/gentoo_setup_files/htoprc /root/.config/htop/htoprc
+    cp /tmp/gentoo_setup_files/htoprc "/home/${USER_NAME}/.config/htop/htoprc"
+    chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/.config/htop"
+fi
+
 #--- Write /etc/motd and /usr/local/etc/gentoo-tips ---
 info "[chroot] Writing /etc/motd and /usr/local/etc/gentoo-tips..."
 cat > /etc/motd << 'MOTD'
@@ -600,9 +620,9 @@ CHROOT_SCRIPT
 chmod +x "${MOUNT_POINT}/tmp/chroot_install.sh"
 
 #######################################
-# Step 12: Execute chroot
+# Step 13: Execute chroot
 #######################################
-info "Step 12: Entering chroot and running installation..."
+info "Step 13: Entering chroot and running installation..."
 
 chroot "${MOUNT_POINT}" /bin/bash -c "
     export TIMEZONE='${TIMEZONE}'
@@ -618,9 +638,9 @@ chroot "${MOUNT_POINT}" /bin/bash -c "
 "
 
 #######################################
-# Step 13: Unmount and finish
+# Step 14: Unmount and finish
 #######################################
-info "Step 13: Unmounting..."
+info "Step 14: Unmounting..."
 
 umount -l "${MOUNT_POINT}/dev"{/shm,/pts,} 2>/dev/null || true
 umount -l "${MOUNT_POINT}/run" 2>/dev/null || true
