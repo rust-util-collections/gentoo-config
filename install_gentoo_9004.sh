@@ -1,11 +1,10 @@
 #!/bin/bash
 #
-# Gentoo Linux one-click installation script
+# Gentoo Linux interactive installation script
 # Platform: AMD EPYC 9004 series (Genoa, znver4) / Supermicro H13SSL
 #
-# This script boots directly via efibootmgr (no GRUB, no initramfs).
-# For EPYC 7003 series (Milan, H12SSL), use install_gentoo_7003.sh instead
-# (7003 requires initramfs to boot).
+# This script uses dracut + GRUB for boot (unified with 7003 script).
+# Using initramfs ensures CPU microcode is loaded correctly at boot.
 #
 # Usage:
 #   Boot from a Fedora/Ubuntu live USB, set up network, then run:
@@ -90,9 +89,18 @@ info "Pre-flight checks..."
 
 [[ "$(id -u)" -eq 0 ]] || error "This script must be run as root"
 [[ -b "${TARGET_DISK}" ]] || error "TARGET_DISK=${TARGET_DISK} is not a block device"
+[[ -d /sys/firmware/efi ]] || error "System not booted in UEFI mode! Please reboot in UEFI mode."
 
-for cmd in wget parted; do
-    command -v "${cmd}" >/dev/null || { apt-get install -y "${cmd}" 2>/dev/null || dnf install -y "${cmd}" 2>/dev/null || true; }
+for cmd in wget parted mkfs.xfs mkfs.vfat; do
+    if ! command -v "${cmd}" >/dev/null; then
+        pkg=""
+        case "${cmd}" in
+            mkfs.xfs) pkg="xfsprogs" ;;
+            mkfs.vfat) pkg="dosfstools" ;;
+            *) pkg="${cmd}" ;;
+        esac
+        apt-get install -y "${pkg}" 2>/dev/null || dnf install -y "${pkg}" 2>/dev/null || true
+    fi
 done
 
 info "Target disk: ${TARGET_DISK}"
@@ -193,10 +201,10 @@ GRUB_PLATFORMS="efi-64"
 
 LLVM_TARGETS="X86 BPF WebAssembly"
 
-ACCEPT_LICENSE="-* @FREE"
+ACCEPT_LICENSE="-* @FREE @BINARY-REDISTRIBUTABLE"
 ACCEPT_KEYWORDS="amd64"
 
-LINGUAS="en_US.UTF-8"
+L10N="en-US zh-CN"
 
 PORTAGE_TMPDIR='/tmp'
 BUILD_PREFIX='/tmp/portage'
@@ -379,46 +387,31 @@ make -j${JOBS}
 make modules_install
 make install
 
-#--- efibootmgr (direct UEFI boot, no GRUB) ---
-info "[chroot] Configuring UEFI boot with efibootmgr..."
-emerge sys-boot/efibootmgr
+#--- Generate initramfs with dracut ---
+info "[chroot] Generating initramfs (for microcode and clean boot)..."
+emerge sys-kernel/dracut
 
-# Find the installed kernel image
 KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
-VMLINUZ="/boot/vmlinuz-${KERNEL_VERSION}"
-if [[ ! -f "${VMLINUZ}" ]]; then
-    VMLINUZ=$(find /boot -name 'vmlinuz-*' -type f | sort -V | tail -1)
-fi
+dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
+info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
 
-# Get the root partition UUID
-ROOT_UUID=$(grep -E '\s/\s' /etc/fstab | grep -oP 'UUID=\S+' | head -1)
+#--- Install and configure GRUB ---
+info "[chroot] Installing GRUB bootloader..."
+emerge sys-boot/grub
 
-# Copy kernel to EFI partition
-mkdir -p /boot/efi/EFI/gentoo
-cp "${VMLINUZ}" /boot/efi/EFI/gentoo/vmlinuz.efi
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
-# Determine the disk and partition number for efibootmgr
-EFI_DISK=$(echo "${EFI_PART}" | sed 's/p\?[0-9]*$//')
-EFI_PARTNUM=$(echo "${EFI_PART}" | grep -oP '[0-9]+$')
+# Generate GRUB config
+echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
+grub-mkconfig -o /boot/grub/grub.cfg
 
-# Remove old Gentoo boot entries if any
-for bootnum in $(efibootmgr | grep -i gentoo | grep -oP 'Boot\K[0-9A-Fa-f]+'); do
-    efibootmgr -b "${bootnum}" -B 2>/dev/null || true
-done
-
-# Create new UEFI boot entry
-efibootmgr -c \
-    -d "${TARGET_DISK}" \
-    -p "${EFI_PARTNUM}" \
-    -L "Gentoo" \
-    -l "\\EFI\\gentoo\\vmlinuz.efi" \
-    -u "root=${ROOT_UUID} rootfstype=xfs ro"
-
-info "[chroot] UEFI boot entry created."
+info "[chroot] GRUB boot configured with initramfs."
 
 #--- Install essential packages ---
 info "[chroot] Installing essential packages..."
 emerge \
+    sys-fs/xfsprogs \
+    sys-fs/dosfstools \
     app-editors/neovim \
     app-shells/zsh \
     sys-apps/mlocate \
@@ -594,7 +587,8 @@ cat > /usr/local/etc/gentoo-tips << 'TIPS'
 --- Kernel ---
 
   Rebuild:         cd /usr/src/linux && make -j$(nproc) && make modules_install && make install
-  Copy to EFI:     cp /boot/vmlinuz-* /boot/efi/EFI/gentoo/vmlinuz.efi
+  Initramfs:       dracut --force /boot/initramfs-$(uname -r).img $(uname -r)
+  Update GRUB:     grub-mkconfig -o /boot/grub/grub.cfg
   Module info:     modinfo <module>
 
 --- Services (OpenRC) ---
@@ -615,6 +609,10 @@ TIPS
 #--- Create dev directory for user ---
 mkdir -p "/home/${USER_NAME}/dev"
 chown "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/dev"
+
+#--- Update eix database ---
+info "[chroot] Updating eix database..."
+eix-update
 
 #--- Cleanup ---
 info "[chroot] Cleaning up..."

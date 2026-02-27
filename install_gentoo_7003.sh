@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Gentoo Linux one-click installation script
+# Gentoo Linux interactive installation script
 # Platform: AMD EPYC 7003 series (Milan, znver3) / Supermicro H12SSL
 #
 # NOTE: EPYC 7003 (Milan) requires initramfs to boot. This script uses
@@ -90,9 +90,18 @@ info "Pre-flight checks..."
 
 [[ "$(id -u)" -eq 0 ]] || error "This script must be run as root"
 [[ -b "${TARGET_DISK}" ]] || error "TARGET_DISK=${TARGET_DISK} is not a block device"
+[[ -d /sys/firmware/efi ]] || error "System not booted in UEFI mode! Please reboot in UEFI mode."
 
-for cmd in wget parted; do
-    command -v "${cmd}" >/dev/null || { apt-get install -y "${cmd}" 2>/dev/null || dnf install -y "${cmd}" 2>/dev/null || true; }
+for cmd in wget parted mkfs.xfs mkfs.vfat; do
+    if ! command -v "${cmd}" >/dev/null; then
+        pkg=""
+        case "${cmd}" in
+            mkfs.xfs) pkg="xfsprogs" ;;
+            mkfs.vfat) pkg="dosfstools" ;;
+            *) pkg="${cmd}" ;;
+        esac
+        apt-get install -y "${pkg}" 2>/dev/null || dnf install -y "${pkg}" 2>/dev/null || true
+    fi
 done
 
 info "Target disk: ${TARGET_DISK}"
@@ -194,10 +203,10 @@ GRUB_PLATFORMS="efi-64"
 
 LLVM_TARGETS="X86 BPF WebAssembly"
 
-ACCEPT_LICENSE="-* @FREE"
+ACCEPT_LICENSE="-* @FREE @BINARY-REDISTRIBUTABLE"
 ACCEPT_KEYWORDS="amd64"
 
-LINGUAS="en_US.UTF-8"
+L10N="en-US zh-CN"
 
 PORTAGE_TMPDIR='/tmp'
 BUILD_PREFIX='/tmp/portage'
@@ -395,6 +404,7 @@ emerge sys-boot/grub
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
 # Generate GRUB config (auto-detects kernel + initramfs)
+echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 info "[chroot] GRUB boot configured with initramfs."
@@ -402,6 +412,8 @@ info "[chroot] GRUB boot configured with initramfs."
 #--- Install essential packages ---
 info "[chroot] Installing essential packages..."
 emerge \
+    sys-fs/xfsprogs \
+    sys-fs/dosfstools \
     app-editors/neovim \
     app-shells/zsh \
     sys-apps/mlocate \
@@ -600,6 +612,10 @@ TIPS
 #--- Create dev directory for user ---
 mkdir -p "/home/${USER_NAME}/dev"
 chown "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/dev"
+
+#--- Update eix database ---
+info "[chroot] Updating eix database..."
+eix-update
 
 #--- Cleanup ---
 info "[chroot] Cleaning up..."
