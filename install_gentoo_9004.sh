@@ -423,6 +423,10 @@ set +u; source /etc/profile; set -u
 info "[chroot] Updating @world (this may take a while)..."
 emerge -q --update --deep --newuse @world || true
 
+#--- Clean orphaned dependencies after @world update ---
+info "[chroot] Cleaning orphaned dependencies..."
+emerge --depclean -q || true
+
 #--- Install kernel sources ---
 if [[ -d /usr/src/linux ]]; then
     info "[chroot] Kernel sources already installed, skipping"
@@ -695,6 +699,11 @@ TIPS
 #--- Create dev directory for user ---
 mkdir -p "/home/${USER_NAME}/dev"
 chown "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/dev"
+
+#--- Final dependency cleanup and distfiles purge ---
+info "[chroot] Final dependency cleanup..."
+emerge --depclean -q || true
+eclean-dist -d 2>/dev/null || true
 
 #--- Update eix database ---
 info "[chroot] Updating eix database..."
