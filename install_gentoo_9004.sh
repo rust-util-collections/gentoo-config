@@ -181,7 +181,7 @@ cd "${MOUNT_POINT}"
 wget -c "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
 
 info "Extracting stage3..."
-tar xpf "${STAGE3_FILE}" --xattrs-include='*.*' --numeric-owner
+tar xpf "${STAGE3_FILE}" --numeric-owner
 rm -f "${STAGE3_FILE}"
 
 #######################################
