@@ -352,6 +352,11 @@ info()  { echo -e "\033[1;32m>>> $*\033[0m"; }
 warn()  { echo -e "\033[1;33m!!! $*\033[0m"; }
 error() { echo -e "\033[1;31mERROR: $*\033[0m" >&2; exit 1; }
 
+emerge() {
+    info "Running: emerge $*"
+    /usr/bin/emerge "$@"
+}
+
 # Variables passed via environment
 TIMEZONE="${TIMEZONE}"
 HOSTNAME="${HOSTNAME}"
@@ -380,6 +385,7 @@ if [[ -d /var/db/repos/gentoo/profiles ]]; then
     info "[chroot] Portage tree already synced, skipping"
 else
     info "[chroot] Syncing portage tree..."
+    info "Running: emerge-webrsync"
     emerge-webrsync
 fi
 
@@ -634,6 +640,7 @@ fi
 
 #--- Write /etc/motd and /usr/local/etc/gentoo-tips ---
 info "[chroot] Writing /etc/motd and /usr/local/etc/gentoo-tips..."
+mkdir -p /usr/local/etc
 cat > /etc/motd << 'MOTD'
   Gentoo tips & cheatsheet: cat /usr/local/etc/gentoo-tips
 MOTD
