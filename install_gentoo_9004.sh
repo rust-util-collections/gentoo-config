@@ -66,7 +66,7 @@ if [[ ! -d "${SCRIPT_DIR}/.git" ]]; then
     SCRIPT_DIR="${CLONE_DIR}"
 fi
 
-KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel/EPYC_9474F_supermicro_h13_ssl___without_initramfs_without_netfilter"
+KERNEL_CONFIG_FILE="${SCRIPT_DIR}/kernel/EPYC_9474F_supermicro_h13_ssl"
 
 # Detect disk type for partition naming (nvme vs sata/sas)
 if [[ "${TARGET_DISK}" == *"nvme"* ]]; then
@@ -91,11 +91,11 @@ info "Pre-flight checks..."
 [[ -b "${TARGET_DISK}" ]] || error "TARGET_DISK=${TARGET_DISK} is not a block device"
 [[ -d /sys/firmware/efi ]] || error "System not booted in UEFI mode! Please reboot in UEFI mode."
 
-for cmd in wget parted mkfs.xfs mkfs.vfat; do
+for cmd in wget parted mkfs.btrfs mkfs.vfat; do
     if ! command -v "${cmd}" >/dev/null; then
         pkg=""
         case "${cmd}" in
-            mkfs.xfs) pkg="xfsprogs" ;;
+            mkfs.btrfs) pkg="btrfs-progs" ;;
             mkfs.vfat) pkg="dosfstools" ;;
             *) pkg="${cmd}" ;;
         esac
@@ -119,7 +119,7 @@ disk_needs_setup=true
 if [[ -b "${EFI_PART}" ]] && [[ -b "${ROOT_PART}" ]]; then
     efi_fstype=$(blkid -s TYPE -o value "${EFI_PART}" 2>/dev/null || true)
     root_fstype=$(blkid -s TYPE -o value "${ROOT_PART}" 2>/dev/null || true)
-    if [[ "${efi_fstype}" == "vfat" ]] && [[ "${root_fstype}" == "xfs" ]]; then
+    if [[ "${efi_fstype}" == "vfat" ]] && [[ "${root_fstype}" == "btrfs" ]]; then
         # Verify EFI partition size matches expected
         efi_actual_bytes=$(blockdev --getsize64 "${EFI_PART}" 2>/dev/null || echo 0)
         _efi_num="${EFI_SIZE%%[A-Za-z]*}"
@@ -132,7 +132,7 @@ if [[ -b "${EFI_PART}" ]] && [[ -b "${ROOT_PART}" ]]; then
             warn "EFI partition too small: $(( efi_actual_bytes / 1048576 ))MiB (expected ~$(( _efi_expected / 1048576 ))MiB), will repartition"
         else
             disk_needs_setup=false
-            info "Step 1-2: Disk already partitioned and formatted (EFI=vfat $(( efi_actual_bytes / 1048576 ))MiB, root=xfs), skipping"
+            info "Step 1-2: Disk already partitioned and formatted (EFI=vfat $(( efi_actual_bytes / 1048576 ))MiB, root=btrfs), skipping"
         fi
     fi
 fi
@@ -148,7 +148,7 @@ if [[ "${disk_needs_setup}" == "true" ]]; then
     parted -s "${TARGET_DISK}" mklabel gpt
     parted -s -a optimal "${TARGET_DISK}" mkpart "EFI" fat32 0% "${EFI_SIZE}"
     parted -s "${TARGET_DISK}" set 1 esp on
-    parted -s -a optimal "${TARGET_DISK}" mkpart "root" xfs "${EFI_SIZE}" 100%
+    parted -s -a optimal "${TARGET_DISK}" mkpart "root" btrfs "${EFI_SIZE}" 100%
 
     sleep 2
     partprobe "${TARGET_DISK}" 2>/dev/null || true
@@ -156,7 +156,7 @@ if [[ "${disk_needs_setup}" == "true" ]]; then
 
     info "Step 2: Formatting partitions..."
     mkfs.vfat -F 32 "${EFI_PART}"
-    mkfs.xfs -f "${ROOT_PART}"
+    mkfs.btrfs -f "${ROOT_PART}"
 
     info "Partitions created: EFI=${EFI_PART} ROOT=${ROOT_PART}"
 fi
@@ -170,7 +170,7 @@ mkdir -p "${MOUNT_POINT}"
 if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
     info "  ${MOUNT_POINT} already mounted, skipping"
 else
-    mount -o noatime,discard,allocsize=64k,inode64,logbufs=8,logbsize=256k "${ROOT_PART}" "${MOUNT_POINT}"
+    mount -o defaults,noatime,discard "${ROOT_PART}" "${MOUNT_POINT}"
 fi
 mkdir -p "${MOUNT_POINT}/boot/efi"
 if mountpoint -q "${MOUNT_POINT}/boot/efi" 2>/dev/null; then
@@ -285,7 +285,7 @@ ROOT_UUID=$(blkid -s UUID -o value "${ROOT_PART}")
 
 cat > "${MOUNT_POINT}/etc/fstab" << FSTAB
 # <fs>          <mountpoint>    <type>      <opts>                          <dump/pass>
-UUID=${ROOT_UUID}   /           xfs     noatime,discard,allocsize=64k,inode64,logbufs=8,logbsize=256k   0 0
+UUID=${ROOT_UUID}   /           btrfs   defaults,noatime,discard   0 0
 UUID=${EFI_UUID}    /boot/efi   vfat    noauto,defaults                     0 0
 FSTAB
 
@@ -456,6 +456,12 @@ emerge -q --update --deep --newuse @world || true
 info "[chroot] Cleaning orphaned dependencies..."
 emerge --depclean -q || true
 
+#--- Install installkernel (with dracut + grub USE flags) ---
+info "[chroot] Configuring installkernel USE flags..."
+mkdir -p /etc/portage/package.use
+echo "sys-kernel/installkernel dracut grub" > /etc/portage/package.use/installkernel
+emerge -q --noreplace sys-kernel/installkernel
+
 #--- Install kernel sources ---
 info "[chroot] Installing kernel sources..."
 kernel_pkgs=()
@@ -467,10 +473,14 @@ else
     info "[chroot] Kernel sources and firmware already installed, skipping"
 fi
 
+#--- Set kernel symlink ---
+info "[chroot] Setting /usr/src/linux symlink..."
+eselect kernel set 1
+
 #--- Compile kernel ---
-KERNEL_SRC=$(find /usr/src -maxdepth 1 -name 'linux-*' -type d | sort -V | tail -1)
+KERNEL_SRC="/usr/src/linux"
 [[ -d "${KERNEL_SRC}" ]] || error "No kernel source found in /usr/src"
-KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
+KERNEL_VERSION=$(basename "$(readlink -f "${KERNEL_SRC}")" | sed 's/linux-//')
 
 if ls /boot/vmlinuz-* >/dev/null 2>&1; then
     info "[chroot] Kernel already compiled and installed, skipping"
@@ -492,23 +502,13 @@ else
     make install
 fi
 
-#--- Generate initramfs with dracut ---
-if [[ -f /boot/initramfs-${KERNEL_VERSION}.img ]]; then
-    info "[chroot] initramfs already exists, skipping"
-else
-    info "[chroot] Generating initramfs (for microcode and clean boot)..."
-    emerge -q --noreplace sys-kernel/dracut
-    dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
-    info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
-fi
-
 #--- Install and configure GRUB ---
+info "[chroot] Installing GRUB bootloader and efibootmgr..."
+emerge -q --noreplace sys-boot/grub sys-boot/efibootmgr
+
 if [[ -f /boot/grub/grub.cfg ]]; then
     info "[chroot] GRUB already configured, skipping"
 else
-    info "[chroot] Installing GRUB bootloader and efibootmgr..."
-    emerge -q --noreplace sys-boot/grub sys-boot/efibootmgr
-
     # Clean up any existing "Gentoo" entries to avoid duplicates
     efibootmgr | grep "Gentoo" | cut -d' ' -f1 | cut -c5-8 | xargs -I {} efibootmgr -b {} -B 2>/dev/null || true
 
@@ -525,13 +525,13 @@ else
         efibootmgr -o "${GENTOO_BOOT_ID}"
     fi
 
-    info "[chroot] GRUB boot configured with initramfs."
+    info "[chroot] GRUB boot configured."
 fi
 
 #--- Install essential packages (--noreplace skips already-installed) ---
 info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
-    sys-fs/xfsprogs \
+    sys-fs/btrfs-progs \
     sys-fs/dosfstools \
     sys-boot/efibootmgr \
     app-editors/neovim \
