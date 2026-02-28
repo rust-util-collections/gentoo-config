@@ -170,7 +170,7 @@ mkdir -p "${MOUNT_POINT}"
 if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
     info "  ${MOUNT_POINT} already mounted, skipping"
 else
-    mount -o defaults,noatime,discard "${ROOT_PART}" "${MOUNT_POINT}"
+    mount -o defaults,noatime,ssd "${ROOT_PART}" "${MOUNT_POINT}"
 fi
 mkdir -p "${MOUNT_POINT}/boot/efi"
 if mountpoint -q "${MOUNT_POINT}/boot/efi" 2>/dev/null; then
@@ -285,7 +285,7 @@ ROOT_UUID=$(blkid -s UUID -o value "${ROOT_PART}")
 
 cat > "${MOUNT_POINT}/etc/fstab" << FSTAB
 # <fs>          <mountpoint>    <type>      <opts>                          <dump/pass>
-UUID=${ROOT_UUID}   /           btrfs   defaults,noatime,discard   0 0
+UUID=${ROOT_UUID}   /           btrfs   defaults,noatime,ssd   0 0
 UUID=${EFI_UUID}    /boot/efi   vfat    noauto,defaults                     0 0
 FSTAB
 
