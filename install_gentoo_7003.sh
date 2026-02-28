@@ -166,10 +166,14 @@ info "Step 4: Downloading stage3 (openrc)..."
 
 STAGE3_URL="${GENTOO_MIRROR}/releases/amd64/autobuilds"
 # Find latest stage3 openrc tarball
-STAGE3_PATH=$(wget -qO- "${STAGE3_URL}/latest-stage3-amd64-openrc.txt" \
-    | grep -v '^#' | grep -v '^$' | head -1 | awk '{print $1}')
+STAGE3_LIST=$(wget -qO- "${STAGE3_URL}/latest-stage3-amd64-openrc.txt" 2>/dev/null || true)
+STAGE3_PATH=$(echo "${STAGE3_LIST}" | grep -v '^#' | grep -v '^-' | grep -v '^$' | grep 'stage3' | head -1 | awk '{print $1}')
 
-[[ -n "${STAGE3_PATH}" ]] || error "Failed to find stage3 tarball URL"
+if [[ -z "${STAGE3_PATH}" ]]; then
+    warn "Failed to parse stage3 URL from mirror. Raw response:"
+    echo "${STAGE3_LIST:-<empty>}" | head -20
+    error "Failed to find stage3 tarball URL from ${STAGE3_URL}/latest-stage3-amd64-openrc.txt"
+fi
 
 STAGE3_FULL_URL="${STAGE3_URL}/${STAGE3_PATH}"
 STAGE3_FILE=$(basename "${STAGE3_PATH}")
