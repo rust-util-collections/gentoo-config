@@ -458,7 +458,14 @@ emerge --depclean -q || true
 
 #--- Install kernel sources ---
 info "[chroot] Installing kernel sources..."
-emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
+kernel_pkgs=()
+portageq has_version / sys-kernel/gentoo-sources || kernel_pkgs+=(sys-kernel/gentoo-sources)
+portageq has_version / sys-kernel/linux-firmware || kernel_pkgs+=(sys-kernel/linux-firmware)
+if [[ ${#kernel_pkgs[@]} -gt 0 ]]; then
+    emerge -q "${kernel_pkgs[@]}"
+else
+    info "[chroot] Kernel sources and firmware already installed, skipping"
+fi
 
 #--- Compile kernel ---
 KERNEL_SRC=$(find /usr/src -maxdepth 1 -name 'linux-*' -type d | sort -V | tail -1)
