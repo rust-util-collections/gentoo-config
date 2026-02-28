@@ -401,11 +401,11 @@ set +u; source /etc/profile; set -u
 
 #--- Update @world ---
 info "[chroot] Updating @world (this may take a while)..."
-emerge --update --deep --newuse @world || true
+emerge -q --update --deep --newuse @world || true
 
 #--- Install kernel sources ---
 info "[chroot] Installing kernel sources..."
-emerge sys-kernel/gentoo-sources sys-kernel/linux-firmware
+emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
 
 #--- Compile kernel ---
 info "[chroot] Compiling kernel..."
@@ -429,7 +429,7 @@ make install
 
 #--- Generate initramfs with dracut ---
 info "[chroot] Generating initramfs (for microcode and clean boot)..."
-emerge sys-kernel/dracut
+emerge -q sys-kernel/dracut
 
 KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
 dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
@@ -437,7 +437,7 @@ info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
 
 #--- Install and configure GRUB ---
 info "[chroot] Installing GRUB bootloader..."
-emerge sys-boot/grub
+emerge -q sys-boot/grub
 
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
@@ -449,7 +449,7 @@ info "[chroot] GRUB boot configured with initramfs."
 
 #--- Install essential packages ---
 info "[chroot] Installing essential packages..."
-emerge \
+emerge -q \
     sys-fs/xfsprogs \
     sys-fs/dosfstools \
     app-editors/neovim \
