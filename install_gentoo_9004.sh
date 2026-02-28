@@ -456,6 +456,10 @@ emerge -q --update --deep --newuse @world || true
 info "[chroot] Cleaning orphaned dependencies..."
 emerge --depclean -q || true
 
+#--- Install filesystem and boot essentials before kernel/initramfs generation ---
+info "[chroot] Installing filesystem and bootloader tools..."
+emerge -q --noreplace sys-fs/btrfs-progs sys-fs/dosfstools sys-boot/grub sys-boot/efibootmgr
+
 #--- Install installkernel (with dracut + grub USE flags) ---
 info "[chroot] Configuring installkernel USE flags..."
 mkdir -p /etc/portage/package.use
@@ -493,7 +497,7 @@ else
         # Adapt old config to new kernel version
         make olddefconfig
     else
-        make defconfig
+        error "Kernel configuration file (/tmp/kernel.config) is missing or empty. Aborting."
     fi
 
     info "[chroot] Building kernel with -j${JOBS}..."
@@ -502,9 +506,8 @@ else
     make install
 fi
 
-#--- Install and configure GRUB ---
-info "[chroot] Installing GRUB bootloader and efibootmgr..."
-emerge -q --noreplace sys-boot/grub sys-boot/efibootmgr
+#--- Configure GRUB ---
+info "[chroot] Configuring GRUB bootloader..."
 
 if [[ -f /boot/grub/grub.cfg ]]; then
     info "[chroot] GRUB already configured, skipping"
@@ -518,22 +521,12 @@ else
     grep -q '^GRUB_TIMEOUT=' /etc/default/grub 2>/dev/null || echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
     grub-mkconfig -o /boot/grub/grub.cfg
 
-    # Ensure Gentoo is the first in BootOrder
-    GENTOO_BOOT_ID=$(efibootmgr | grep "Gentoo" | head -n 1 | cut -d' ' -f1 | cut -c5-8)
-    if [[ -n "${GENTOO_BOOT_ID}" ]]; then
-        info "[chroot] Setting Gentoo (${GENTOO_BOOT_ID}) as the primary boot entry..."
-        efibootmgr -o "${GENTOO_BOOT_ID}"
-    fi
-
     info "[chroot] GRUB boot configured."
 fi
 
 #--- Install essential packages (--noreplace skips already-installed) ---
 info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
-    sys-fs/btrfs-progs \
-    sys-fs/dosfstools \
-    sys-boot/efibootmgr \
     app-editors/neovim \
     app-shells/zsh \
     sys-apps/mlocate \
@@ -556,7 +549,6 @@ sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/ssh
 #--- Enable services ---
 info "[chroot] Enabling services..."
 rc-update add sshd default 2>/dev/null || true
-rc-update add dhcpcd default 2>/dev/null || true
 
 #--- Set hostname ---
 info "[chroot] Setting hostname to ${HOSTNAME}..."
