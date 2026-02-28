@@ -223,7 +223,7 @@ CFLAGS="-march=znver3 -O2 -pipe"
 CXXFLAGS="${CFLAGS}"
 CHOST="x86_64-pc-linux-gnu"
 
-USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs -ruby -lua -introspection -test"
+USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs -webdav -ruby -lua -introspection -test"
 
 CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
 
@@ -353,6 +353,29 @@ warn()  { echo -e "\033[1;33m!!! $*\033[0m"; }
 error() { echo -e "\033[1;31mERROR: $*\033[0m" >&2; exit 1; }
 
 emerge() {
+    # Skip check for world updates, syncs, or config tasks
+    if [[ "$*" =~ "@world" ]] || [[ "$*" =~ "--sync" ]] || [[ "$*" =~ "--webrsync" ]] || [[ "$*" =~ "--config" ]] || [[ "$*" =~ "--depclean" ]]; then
+        info "Running: emerge $*"
+        /usr/bin/emerge "$@"
+        return
+    fi
+
+    # For package installs, check if they are already installed with same version & USE
+    # We use --update --newuse --noreplace to see if any changes are needed
+    local pkgs=()
+    for arg in "$@"; do
+        if [[ ! "${arg}" =~ ^- ]]; then
+            pkgs+=("${arg}")
+        fi
+    done
+
+    if [[ ${#pkgs[@]} -gt 0 ]]; then
+        if [[ -z "$(/usr/bin/emerge -pq --update --newuse --noreplace "${pkgs[@]}" 2>/dev/null | grep -v '^$')" ]]; then
+            info "Skipping emerge $*: already installed with correct version and USE"
+            return 0
+        fi
+    fi
+
     info "Running: emerge $*"
     /usr/bin/emerge "$@"
 }
@@ -436,12 +459,8 @@ info "[chroot] Cleaning orphaned dependencies..."
 emerge --depclean -q || true
 
 #--- Install kernel sources ---
-if [[ -d /usr/src/linux ]]; then
-    info "[chroot] Kernel sources already installed, skipping"
-else
-    info "[chroot] Installing kernel sources..."
-    emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
-fi
+info "[chroot] Installing kernel sources..."
+emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
 
 #--- Compile kernel ---
 KERNEL_SRC=$(find /usr/src -maxdepth 1 -name 'linux-*' -type d | sort -V | tail -1)
@@ -482,14 +501,24 @@ fi
 if [[ -f /boot/grub/grub.cfg ]]; then
     info "[chroot] GRUB already configured, skipping"
 else
-    info "[chroot] Installing GRUB bootloader..."
-    emerge -q --noreplace sys-boot/grub
+    info "[chroot] Installing GRUB bootloader and efibootmgr..."
+    emerge -q --noreplace sys-boot/grub sys-boot/efibootmgr
+
+    # Clean up any existing "Gentoo" entries to avoid duplicates
+    efibootmgr | grep "Gentoo" | cut -d' ' -f1 | cut -c5-8 | xargs -I {} efibootmgr -b {} -B 2>/dev/null || true
 
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
     # Generate GRUB config (auto-detects kernel + initramfs)
     grep -q '^GRUB_TIMEOUT=' /etc/default/grub 2>/dev/null || echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
     grub-mkconfig -o /boot/grub/grub.cfg
+
+    # Ensure Gentoo is the first in BootOrder
+    GENTOO_BOOT_ID=$(efibootmgr | grep "Gentoo" | head -n 1 | cut -d' ' -f1 | cut -c5-8)
+    if [[ -n "${GENTOO_BOOT_ID}" ]]; then
+        info "[chroot] Setting Gentoo (${GENTOO_BOOT_ID}) as the primary boot entry..."
+        efibootmgr -o "${GENTOO_BOOT_ID}"
+    fi
 
     info "[chroot] GRUB boot configured with initramfs."
 fi
@@ -499,6 +528,7 @@ info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
     sys-fs/xfsprogs \
     sys-fs/dosfstools \
+    sys-boot/efibootmgr \
     app-editors/neovim \
     app-shells/zsh \
     sys-apps/mlocate \
@@ -582,15 +612,16 @@ STATICCONF
     touch /var/lib/gentoo-install/.network_configured
 fi
 
-#--- Set root password ---
-info "[chroot] Setting root password..."
-echo "root:${ROOT_PASSWORD}" | chpasswd
-
-#--- Allow weak passwords ---
+#--- Allow weak passwords (must be done before setting passwords) ---
 if [[ -f /etc/security/passwdqc.conf ]]; then
+    info "[chroot] Relaxing password complexity rules..."
     sed -i 's/^enforce=.*/enforce=none/' /etc/security/passwdqc.conf
     grep -q '^enforce=' /etc/security/passwdqc.conf || echo 'enforce=none' >> /etc/security/passwdqc.conf
 fi
+
+#--- Set root password ---
+info "[chroot] Setting root password..."
+echo "root:${ROOT_PASSWORD}" | chpasswd
 
 #--- Create non-root user ---
 if id "${USER_NAME}" &>/dev/null; then
