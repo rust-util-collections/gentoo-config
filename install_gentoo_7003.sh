@@ -223,7 +223,7 @@ CFLAGS="-march=znver3 -O2 -pipe"
 CXXFLAGS="${CFLAGS}"
 CHOST="x86_64-pc-linux-gnu"
 
-USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs"
+USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs -ruby -lua -introspection -test"
 
 CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
 
@@ -370,34 +370,54 @@ source /etc/profile
 set -u
 export PS1="(chroot) ${PS1:-# }"
 
-#--- Mount boot ---
-mount /boot/efi 2>/dev/null || true
+#--- Mount boot (skip if already mounted to prevent stacking) ---
+if ! mountpoint -q /boot/efi 2>/dev/null; then
+    mount /boot/efi 2>/dev/null || true
+fi
 
-#--- Sync portage ---
-info "[chroot] Syncing portage tree..."
-emerge-webrsync
+#--- Sync portage (skip if repo already exists) ---
+if [[ -d /var/db/repos/gentoo/profiles ]]; then
+    info "[chroot] Portage tree already synced, skipping"
+else
+    info "[chroot] Syncing portage tree..."
+    emerge-webrsync
+fi
 
-#--- Select profile (interactive) ---
-info "[chroot] Available profiles:"
-eselect profile list
-echo ""
-read -rp "Enter profile number: " PROFILE_NUM
-eselect profile set "${PROFILE_NUM}"
-info "[chroot] Selected profile #${PROFILE_NUM}"
+#--- Select profile (interactive, skip if already done) ---
+if [[ -f /var/lib/gentoo-install/.profile_set ]]; then
+    info "[chroot] Profile already selected: $(eselect profile show | tail -1), skipping"
+else
+    info "[chroot] Available profiles:"
+    eselect profile list
+    echo ""
+    read -rp "Enter profile number: " PROFILE_NUM
+    eselect profile set "${PROFILE_NUM}"
+    info "[chroot] Selected profile #${PROFILE_NUM}"
+    mkdir -p /var/lib/gentoo-install
+    touch /var/lib/gentoo-install/.profile_set
+fi
 
 #--- Timezone ---
-info "[chroot] Setting timezone to ${TIMEZONE}..."
-echo "${TIMEZONE}" > /etc/timezone
-emerge --config sys-libs/timezone-data
+if [[ "$(cat /etc/timezone 2>/dev/null)" == "${TIMEZONE}" ]]; then
+    info "[chroot] Timezone already set to ${TIMEZONE}, skipping"
+else
+    info "[chroot] Setting timezone to ${TIMEZONE}..."
+    echo "${TIMEZONE}" > /etc/timezone
+    emerge --config sys-libs/timezone-data
+fi
 
 #--- Locale ---
-info "[chroot] Configuring locale..."
-cat > /etc/locale.gen << 'LOCALE'
+if locale -a 2>/dev/null | grep -q 'en_US.utf8'; then
+    info "[chroot] Locale already configured, skipping"
+else
+    info "[chroot] Configuring locale..."
+    cat > /etc/locale.gen << 'LOCALE'
 en_US.UTF-8 UTF-8
 zh_CN.UTF-8 UTF-8
 LOCALE
-locale-gen
-eselect locale set en_US.utf8 2>/dev/null || eselect locale set en_US.UTF-8 2>/dev/null || true
+    locale-gen
+    eselect locale set en_US.utf8 2>/dev/null || eselect locale set en_US.UTF-8 2>/dev/null || true
+fi
 env-update
 set +u; source /etc/profile; set -u
 
@@ -406,52 +426,67 @@ info "[chroot] Updating @world (this may take a while)..."
 emerge -q --update --deep --newuse @world || true
 
 #--- Install kernel sources ---
-info "[chroot] Installing kernel sources..."
-emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
-
-#--- Compile kernel ---
-info "[chroot] Compiling kernel..."
-KERNEL_SRC=$(find /usr/src -maxdepth 1 -name 'linux-*' -type d | sort -V | tail -1)
-[[ -d "${KERNEL_SRC}" ]] || error "No kernel source found in /usr/src"
-
-cd "${KERNEL_SRC}"
-
-if [[ -s /tmp/kernel.config ]]; then
-    cp /tmp/kernel.config .config
-    # Adapt old config to new kernel version
-    make olddefconfig
+if [[ -d /usr/src/linux ]]; then
+    info "[chroot] Kernel sources already installed, skipping"
 else
-    make defconfig
+    info "[chroot] Installing kernel sources..."
+    emerge -q sys-kernel/gentoo-sources sys-kernel/linux-firmware
 fi
 
-info "[chroot] Building kernel with -j${JOBS}..."
-make -j${JOBS}
-make modules_install
-make install
+#--- Compile kernel ---
+KERNEL_SRC=$(find /usr/src -maxdepth 1 -name 'linux-*' -type d | sort -V | tail -1)
+[[ -d "${KERNEL_SRC}" ]] || error "No kernel source found in /usr/src"
+KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
+
+if ls /boot/vmlinuz-* >/dev/null 2>&1; then
+    info "[chroot] Kernel already compiled and installed, skipping"
+else
+    info "[chroot] Compiling kernel..."
+    cd "${KERNEL_SRC}"
+
+    if [[ -s /tmp/kernel.config ]]; then
+        cp /tmp/kernel.config .config
+        # Adapt old config to new kernel version
+        make olddefconfig
+    else
+        make defconfig
+    fi
+
+    info "[chroot] Building kernel with -j${JOBS}..."
+    make -j${JOBS}
+    make modules_install
+    make install
+fi
 
 #--- Generate initramfs with dracut ---
-info "[chroot] Generating initramfs (required for EPYC 7003 to boot)..."
-emerge -q sys-kernel/dracut
-
-KERNEL_VERSION=$(basename "${KERNEL_SRC}" | sed 's/linux-//')
-dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
-info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
+if [[ -f /boot/initramfs-${KERNEL_VERSION}.img ]]; then
+    info "[chroot] initramfs already exists, skipping"
+else
+    info "[chroot] Generating initramfs (required for EPYC 7003 to boot)..."
+    emerge -q --noreplace sys-kernel/dracut
+    dracut --force /boot/initramfs-${KERNEL_VERSION}.img ${KERNEL_VERSION}
+    info "[chroot] initramfs generated: /boot/initramfs-${KERNEL_VERSION}.img"
+fi
 
 #--- Install and configure GRUB ---
-info "[chroot] Installing GRUB bootloader..."
-emerge -q sys-boot/grub
+if [[ -f /boot/grub/grub.cfg ]]; then
+    info "[chroot] GRUB already configured, skipping"
+else
+    info "[chroot] Installing GRUB bootloader..."
+    emerge -q --noreplace sys-boot/grub
 
-grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
-# Generate GRUB config (auto-detects kernel + initramfs)
-grep -q '^GRUB_TIMEOUT=' /etc/default/grub 2>/dev/null || echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
-grub-mkconfig -o /boot/grub/grub.cfg
+    # Generate GRUB config (auto-detects kernel + initramfs)
+    grep -q '^GRUB_TIMEOUT=' /etc/default/grub 2>/dev/null || echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
 
-info "[chroot] GRUB boot configured with initramfs."
+    info "[chroot] GRUB boot configured with initramfs."
+fi
 
-#--- Install essential packages ---
+#--- Install essential packages (--noreplace skips already-installed) ---
 info "[chroot] Installing essential packages..."
-emerge -q \
+emerge -q --noreplace \
     sys-fs/xfsprogs \
     sys-fs/dosfstools \
     app-editors/neovim \
@@ -467,67 +502,74 @@ emerge -q \
     app-portage/eix \
     app-portage/gentoolkit
 
-#--- Configure SSH ---
+#--- Configure SSH (idempotent: match both commented and uncommented lines) ---
 info "[chroot] Configuring SSH..."
-sed -i "s/^#Port 22/Port ${SSH_PORT}/" /etc/ssh/sshd_config
-sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sed -i "s/^#\?Port .*/Port ${SSH_PORT}/" /etc/ssh/sshd_config
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
 #--- Enable services ---
 info "[chroot] Enabling services..."
-rc-update add sshd default
-rc-update add dhcpcd default
+rc-update add sshd default 2>/dev/null || true
+rc-update add dhcpcd default 2>/dev/null || true
 
 #--- Set hostname ---
 info "[chroot] Setting hostname to ${HOSTNAME}..."
 echo "hostname=\"${HOSTNAME}\"" > /etc/conf.d/hostname
 
-#--- Configure network (interactive, per-interface) ---
-info "[chroot] Configuring network..."
+#--- Configure network (interactive, skip if already done) ---
+if [[ -f /var/lib/gentoo-install/.network_configured ]]; then
+    info "[chroot] Network already configured, skipping"
+else
+    info "[chroot] Configuring network..."
 
-cat > /etc/conf.d/net << 'NETHEAD'
+    cat > /etc/conf.d/net << 'NETHEAD'
 # Auto-generated by install_gentoo_7003.sh
 NETHEAD
 
-ALL_IFS=$(ls /sys/class/net/ 2>/dev/null | grep -vE '^lo$' | sort)
+    ALL_IFS=$(ls /sys/class/net/ 2>/dev/null | grep -vE '^lo$' | sort)
 
-if [[ -z "${ALL_IFS}" ]]; then
-    warn "[chroot] No network interfaces detected, skipping"
-else
-    for iface in ${ALL_IFS}; do
-        echo ""
-        info "Interface: ${iface}"
-        echo "  [1] dhcp (default)"
-        echo "  [2] static"
-        echo "  [3] none (skip)"
-        read -rp "  Choose [1/2/3]: " choice
-        choice="${choice:-1}"
+    if [[ -z "${ALL_IFS}" ]]; then
+        warn "[chroot] No network interfaces detected, skipping"
+    else
+        for iface in ${ALL_IFS}; do
+            echo ""
+            info "Interface: ${iface}"
+            echo "  [1] dhcp (default)"
+            echo "  [2] static"
+            echo "  [3] none (skip)"
+            read -rp "  Choose [1/2/3]: " choice
+            choice="${choice:-1}"
 
-        case "${choice}" in
-            2)
-                read -rp "  IP address (e.g. 192.168.1.100/24): " static_ip
-                read -rp "  Gateway    (e.g. 192.168.1.1):      " static_gw
-                read -rp "  DNS        (e.g. 8.8.8.8):          " static_dns
-                cat >> /etc/conf.d/net << STATICCONF
+            case "${choice}" in
+                2)
+                    read -rp "  IP address (e.g. 192.168.1.100/24): " static_ip
+                    read -rp "  Gateway    (e.g. 192.168.1.1):      " static_gw
+                    read -rp "  DNS        (e.g. 8.8.8.8):          " static_dns
+                    cat >> /etc/conf.d/net << STATICCONF
 
 config_${iface}="${static_ip}"
 routes_${iface}="default via ${static_gw}"
 dns_servers_${iface}="${static_dns}"
 STATICCONF
-                ;;
-            3)
-                info "  Skipping ${iface}"
-                continue
-                ;;
-            *)
-                echo "config_${iface}=\"dhcp\"" >> /etc/conf.d/net
-                ;;
-        esac
+                    ;;
+                3)
+                    info "  Skipping ${iface}"
+                    continue
+                    ;;
+                *)
+                    echo "config_${iface}=\"dhcp\"" >> /etc/conf.d/net
+                    ;;
+            esac
 
-        cd /etc/init.d
-        ln -sf net.lo "net.${iface}" 2>/dev/null || true
-        rc-update add "net.${iface}" default 2>/dev/null || true
-    done
+            cd /etc/init.d
+            ln -sf net.lo "net.${iface}" 2>/dev/null || true
+            rc-update add "net.${iface}" default 2>/dev/null || true
+        done
+    fi
+
+    mkdir -p /var/lib/gentoo-install
+    touch /var/lib/gentoo-install/.network_configured
 fi
 
 #--- Set root password ---
@@ -541,8 +583,12 @@ if [[ -f /etc/security/passwdqc.conf ]]; then
 fi
 
 #--- Create non-root user ---
-info "[chroot] Creating user ${USER_NAME}..."
-useradd -m -G wheel,audio,video,portage,usb -s /bin/zsh "${USER_NAME}" 2>/dev/null || true
+if id "${USER_NAME}" &>/dev/null; then
+    info "[chroot] User ${USER_NAME} already exists, skipping creation"
+else
+    info "[chroot] Creating user ${USER_NAME}..."
+    useradd -m -G wheel,audio,video,portage,usb -s /bin/zsh "${USER_NAME}"
+fi
 echo "${USER_NAME}:${USER_PASSWORD}" | chpasswd
 
 #--- Set root shell to zsh ---
