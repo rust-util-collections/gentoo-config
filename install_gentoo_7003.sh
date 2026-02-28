@@ -109,45 +109,47 @@ info "Hostname:    ${HOSTNAME}"
 info "Mirror:      ${GENTOO_MIRROR}"
 info "Timezone:    ${TIMEZONE}"
 info "Jobs:        ${JOBS}"
-echo ""
-warn "ALL DATA ON ${TARGET_DISK} WILL BE DESTROYED!"
-echo ""
-read -rp "Continue? (yes/no): " confirm
-[[ "${confirm}" == "yes" ]] || { echo "Aborted."; exit 1; }
+
+# Partition naming (determined early for idempotency checks)
+EFI_PART="${PART_PREFIX}1"
+ROOT_PART="${PART_PREFIX}2"
 
 #######################################
-# Step 1: Partition the disk
+# Step 1-2: Partition and format (idempotent)
 #######################################
-info "Step 1: Partitioning ${TARGET_DISK}..."
+disk_needs_setup=true
+if [[ -b "${EFI_PART}" ]] && [[ -b "${ROOT_PART}" ]]; then
+    efi_fstype=$(blkid -s TYPE -o value "${EFI_PART}" 2>/dev/null || true)
+    root_fstype=$(blkid -s TYPE -o value "${ROOT_PART}" 2>/dev/null || true)
+    if [[ "${efi_fstype}" == "vfat" ]] && [[ "${root_fstype}" == "xfs" ]]; then
+        disk_needs_setup=false
+        info "Step 1-2: Disk already partitioned and formatted (EFI=vfat, root=xfs), skipping"
+    fi
+fi
 
-parted -s "${TARGET_DISK}" mklabel gpt
+if [[ "${disk_needs_setup}" == "true" ]]; then
+    echo ""
+    warn "ALL DATA ON ${TARGET_DISK} WILL BE DESTROYED!"
+    echo ""
+    read -rp "Continue? (yes/no): " confirm
+    [[ "${confirm}" == "yes" ]] || { echo "Aborted."; exit 1; }
 
-PART_NUM=1
+    info "Step 1: Partitioning ${TARGET_DISK}..."
+    parted -s "${TARGET_DISK}" mklabel gpt
+    parted -s -a optimal "${TARGET_DISK}" mkpart "EFI" fat32 1MiB "${EFI_SIZE}"
+    parted -s "${TARGET_DISK}" set 1 esp on
+    parted -s -a optimal "${TARGET_DISK}" mkpart "root" xfs "${EFI_SIZE}" 100%
 
-# EFI partition
-parted -s -a optimal "${TARGET_DISK}" mkpart "EFI" fat32 1MiB "${EFI_SIZE}"
-parted -s "${TARGET_DISK}" set ${PART_NUM} esp on
-EFI_PART="${PART_PREFIX}${PART_NUM}"
-PART_NUM=$((PART_NUM + 1))
+    sleep 2
+    partprobe "${TARGET_DISK}" 2>/dev/null || true
+    sleep 1
 
-# Root partition (rest of the disk)
-parted -s -a optimal "${TARGET_DISK}" mkpart "root" xfs "${EFI_SIZE}" 100%
-ROOT_PART="${PART_PREFIX}${PART_NUM}"
+    info "Step 2: Formatting partitions..."
+    mkfs.vfat -F 32 "${EFI_PART}"
+    mkfs.xfs -f "${ROOT_PART}"
 
-# Let kernel re-read partition table
-sleep 2
-partprobe "${TARGET_DISK}" 2>/dev/null || true
-sleep 1
-
-info "Partitions created: EFI=${EFI_PART} ROOT=${ROOT_PART}"
-
-#######################################
-# Step 2: Format partitions
-#######################################
-info "Step 2: Formatting partitions..."
-
-mkfs.vfat -F 32 "${EFI_PART}"
-mkfs.xfs -f "${ROOT_PART}"
+    info "Partitions created: EFI=${EFI_PART} ROOT=${ROOT_PART}"
+fi
 
 #######################################
 # Step 3: Mount and prepare
@@ -155,36 +157,48 @@ mkfs.xfs -f "${ROOT_PART}"
 info "Step 3: Mounting filesystems..."
 
 mkdir -p "${MOUNT_POINT}"
-mount -o noatime,discard,allocsize=64k,inode64,logbufs=8,logbsize=256k "${ROOT_PART}" "${MOUNT_POINT}"
+if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
+    info "  ${MOUNT_POINT} already mounted, skipping"
+else
+    mount -o noatime,discard,allocsize=64k,inode64,logbufs=8,logbsize=256k "${ROOT_PART}" "${MOUNT_POINT}"
+fi
 mkdir -p "${MOUNT_POINT}/boot/efi"
-mount "${EFI_PART}" "${MOUNT_POINT}/boot/efi"
+if mountpoint -q "${MOUNT_POINT}/boot/efi" 2>/dev/null; then
+    info "  ${MOUNT_POINT}/boot/efi already mounted, skipping"
+else
+    mount "${EFI_PART}" "${MOUNT_POINT}/boot/efi"
+fi
 
 #######################################
 # Step 4: Download and extract stage3
 #######################################
-info "Step 4: Downloading stage3 (openrc)..."
+if [[ -x "${MOUNT_POINT}/usr/bin/emerge" ]]; then
+    info "Step 4: Stage3 already extracted, skipping"
+else
+    info "Step 4: Downloading stage3 (openrc)..."
 
-STAGE3_URL="${GENTOO_MIRROR}/releases/amd64/autobuilds"
-# Find latest stage3 openrc tarball
-STAGE3_LIST=$(wget -qO- "${STAGE3_URL}/latest-stage3-amd64-openrc.txt" 2>/dev/null || true)
-STAGE3_PATH=$(echo "${STAGE3_LIST}" | grep -v '^#' | grep -v '^-' | grep -v '^$' | grep 'stage3' | head -1 | awk '{print $1}')
+    STAGE3_URL="${GENTOO_MIRROR}/releases/amd64/autobuilds"
+    # Find latest stage3 openrc tarball
+    STAGE3_LIST=$(wget -qO- "${STAGE3_URL}/latest-stage3-amd64-openrc.txt" 2>/dev/null || true)
+    STAGE3_PATH=$(echo "${STAGE3_LIST}" | grep -v '^#' | grep -v '^-' | grep -v '^$' | grep 'stage3' | head -1 | awk '{print $1}')
 
-if [[ -z "${STAGE3_PATH}" ]]; then
-    warn "Failed to parse stage3 URL from mirror. Raw response:"
-    echo "${STAGE3_LIST:-<empty>}" | head -20
-    error "Failed to find stage3 tarball URL from ${STAGE3_URL}/latest-stage3-amd64-openrc.txt"
+    if [[ -z "${STAGE3_PATH}" ]]; then
+        warn "Failed to parse stage3 URL from mirror. Raw response:"
+        echo "${STAGE3_LIST:-<empty>}" | head -20
+        error "Failed to find stage3 tarball URL from ${STAGE3_URL}/latest-stage3-amd64-openrc.txt"
+    fi
+
+    STAGE3_FULL_URL="${STAGE3_URL}/${STAGE3_PATH}"
+    STAGE3_FILE=$(basename "${STAGE3_PATH}")
+
+    info "Downloading ${STAGE3_FULL_URL}..."
+    cd "${MOUNT_POINT}"
+    wget -c "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
+
+    info "Extracting stage3..."
+    tar xpf "${STAGE3_FILE}" --numeric-owner
+    rm -f "${STAGE3_FILE}"
 fi
-
-STAGE3_FULL_URL="${STAGE3_URL}/${STAGE3_PATH}"
-STAGE3_FILE=$(basename "${STAGE3_PATH}")
-
-info "Downloading ${STAGE3_FULL_URL}..."
-cd "${MOUNT_POINT}"
-wget -c "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
-
-info "Extracting stage3..."
-tar xpf "${STAGE3_FILE}" --numeric-owner
-rm -f "${STAGE3_FILE}"
 
 #######################################
 # Step 5: Configure make.conf
@@ -236,13 +250,19 @@ info "Step 6: Preparing chroot environment..."
 
 cp -L /etc/resolv.conf "${MOUNT_POINT}/etc/"
 
-mount --types proc /proc "${MOUNT_POINT}/proc"
-mount --rbind /sys "${MOUNT_POINT}/sys"
-mount --make-rslave "${MOUNT_POINT}/sys"
-mount --rbind /dev "${MOUNT_POINT}/dev"
-mount --make-rslave "${MOUNT_POINT}/dev"
-mount --bind /run "${MOUNT_POINT}/run"
-mount --make-slave "${MOUNT_POINT}/run"
+mountpoint -q "${MOUNT_POINT}/proc" 2>/dev/null || mount --types proc /proc "${MOUNT_POINT}/proc"
+if ! mountpoint -q "${MOUNT_POINT}/sys" 2>/dev/null; then
+    mount --rbind /sys "${MOUNT_POINT}/sys"
+    mount --make-rslave "${MOUNT_POINT}/sys"
+fi
+if ! mountpoint -q "${MOUNT_POINT}/dev" 2>/dev/null; then
+    mount --rbind /dev "${MOUNT_POINT}/dev"
+    mount --make-rslave "${MOUNT_POINT}/dev"
+fi
+if ! mountpoint -q "${MOUNT_POINT}/run" 2>/dev/null; then
+    mount --bind /run "${MOUNT_POINT}/run"
+    mount --make-slave "${MOUNT_POINT}/run"
+fi
 
 #######################################
 # Step 7: Generate fstab
@@ -408,7 +428,7 @@ emerge sys-boot/grub
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
 # Generate GRUB config (auto-detects kernel + initramfs)
-echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
+grep -q '^GRUB_TIMEOUT=' /etc/default/grub 2>/dev/null || echo 'GRUB_TIMEOUT=3' >> /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 
 info "[chroot] GRUB boot configured with initramfs."
