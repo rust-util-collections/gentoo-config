@@ -19,11 +19,11 @@
 #     bash install_gentoo_9004.sh
 #
 # Optional environment variables (with defaults):
-#     export GENTOO_MIRROR="https://mirrors.163.com/gentoo"
+#     export GENTOO_MIRROR="https://distfiles.gentoo.org"
 #     export TIMEZONE="Asia/Shanghai"
 #     export SSH_PORT="22"
 #     export KERNEL_CONFIG_URL=""   # URL to download kernel .config, empty = use bundled config from this repo
-#     export EFI_SIZE="512M"
+#     export EFI_SIZE="512MiB"
 #     export USER_NAME="fh"        # non-root user to create
 #     export USER_PASSWORD=""       # password for non-root user, empty = same as ROOT_PASSWORD
 #     export JOBS=""                # parallel build jobs, empty = auto-detect (nproc)
@@ -41,10 +41,10 @@ set -euo pipefail
 # Optional variables with defaults
 #######################################
 HOSTNAME="${HOSTNAME:-epyc}"
-GENTOO_MIRROR="${GENTOO_MIRROR:-https://mirrors.163.com/gentoo}"
+GENTOO_MIRROR="${GENTOO_MIRROR:-https://distfiles.gentoo.org}"
 TIMEZONE="${TIMEZONE:-Asia/Shanghai}"
 SSH_PORT="${SSH_PORT:-22}"
-EFI_SIZE="${EFI_SIZE:-512M}"
+EFI_SIZE="${EFI_SIZE:-512MiB}"
 USER_NAME="${USER_NAME:-fh}"
 USER_PASSWORD="${USER_PASSWORD:-${ROOT_PASSWORD}}"
 JOBS="${JOBS:-$(nproc)}"
@@ -120,8 +120,20 @@ if [[ -b "${EFI_PART}" ]] && [[ -b "${ROOT_PART}" ]]; then
     efi_fstype=$(blkid -s TYPE -o value "${EFI_PART}" 2>/dev/null || true)
     root_fstype=$(blkid -s TYPE -o value "${ROOT_PART}" 2>/dev/null || true)
     if [[ "${efi_fstype}" == "vfat" ]] && [[ "${root_fstype}" == "xfs" ]]; then
-        disk_needs_setup=false
-        info "Step 1-2: Disk already partitioned and formatted (EFI=vfat, root=xfs), skipping"
+        # Verify EFI partition size matches expected
+        efi_actual_bytes=$(blockdev --getsize64 "${EFI_PART}" 2>/dev/null || echo 0)
+        _efi_num="${EFI_SIZE%%[A-Za-z]*}"
+        case "${EFI_SIZE}" in
+            *GiB) _efi_expected=$((_efi_num * 1073741824)) ;;
+            *)    _efi_expected=$((_efi_num * 1048576)) ;;
+        esac
+        _efi_tolerance=$((_efi_expected / 20))  # 5% tolerance for alignment
+        if (( efi_actual_bytes < _efi_expected - _efi_tolerance )); then
+            warn "EFI partition too small: $(( efi_actual_bytes / 1048576 ))MiB (expected ~$(( _efi_expected / 1048576 ))MiB), will repartition"
+        else
+            disk_needs_setup=false
+            info "Step 1-2: Disk already partitioned and formatted (EFI=vfat $(( efi_actual_bytes / 1048576 ))MiB, root=xfs), skipping"
+        fi
     fi
 fi
 
@@ -134,7 +146,7 @@ if [[ "${disk_needs_setup}" == "true" ]]; then
 
     info "Step 1: Partitioning ${TARGET_DISK}..."
     parted -s "${TARGET_DISK}" mklabel gpt
-    parted -s -a optimal "${TARGET_DISK}" mkpart "EFI" fat32 1MiB "${EFI_SIZE}"
+    parted -s -a optimal "${TARGET_DISK}" mkpart "EFI" fat32 0% "${EFI_SIZE}"
     parted -s "${TARGET_DISK}" set 1 esp on
     parted -s -a optimal "${TARGET_DISK}" mkpart "root" xfs "${EFI_SIZE}" 100%
 
@@ -191,7 +203,8 @@ else
 
     info "Downloading ${STAGE3_FULL_URL}..."
     cd "${MOUNT_POINT}"
-    wget -c "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
+    rm -f "${STAGE3_FILE}"
+    wget "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
 
     info "Extracting stage3..."
     tar xpf "${STAGE3_FILE}" --numeric-owner
@@ -350,8 +363,10 @@ JOBS="${JOBS}"
 
 #--- Reload environment ---
 info "[chroot] Reloading environment..."
+set +u
 source /etc/profile
-export PS1="(chroot) $PS1"
+set -u
+export PS1="(chroot) ${PS1:-# }"
 
 #--- Mount boot ---
 mount /boot/efi 2>/dev/null || true
@@ -381,7 +396,8 @@ zh_CN.UTF-8 UTF-8
 LOCALE
 locale-gen
 eselect locale set en_US.utf8 2>/dev/null || eselect locale set en_US.UTF-8 2>/dev/null || true
-env-update && source /etc/profile
+env-update
+set +u; source /etc/profile; set -u
 
 #--- Update @world ---
 info "[chroot] Updating @world (this may take a while)..."
