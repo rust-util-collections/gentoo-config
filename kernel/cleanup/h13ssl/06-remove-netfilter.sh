@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Tier 06 - Netfilter cleanup (keep only nftables core)
+# Tier 06 - Netfilter cleanup (keep only nftables core + Podman requirements)
 #
 # Removes IPVS, ipset, iptables/ip6tables, old conntrack helpers,
-# unused nft modules, all xtables match/targets, bridge netfilter.
+# unused nft modules, all xtables match/targets.
 #
 # Keeps: NF_TABLES, NFT_CT/LOG/LIMIT/NAT/MASQ/REJECT/FIB/COMPAT,
-#        NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK
+#        NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK,
+#        BRIDGE, BRIDGE_NETFILTER (required by Podman/Netavark)
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -203,9 +204,9 @@ disable_opt CONFIG_NETFILTER_XT_MATCH_TCPMSS
 disable_opt CONFIG_NETFILTER_XT_MATCH_TIME
 disable_opt CONFIG_NETFILTER_XT_MATCH_U32
 
-# --- Bridge netfilter (No containers/bridge needed usually here, but see tier 08) ---
-disable_opt CONFIG_BRIDGE
-disable_opt CONFIG_BRIDGE_NETFILTER
+# --- Bridge netfilter (partial) ---
+# CONFIG_BRIDGE and CONFIG_BRIDGE_NETFILTER are kept: required by Podman/Netavark.
+# The following are not needed for containers or pure nftables operation:
 disable_opt CONFIG_NF_TABLES_BRIDGE
 disable_opt CONFIG_NF_CONNTRACK_BRIDGE
 disable_opt CONFIG_BRIDGE_NF_EBTABLES

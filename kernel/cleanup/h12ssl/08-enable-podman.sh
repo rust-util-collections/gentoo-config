@@ -5,6 +5,8 @@
 # Enables or ensures kernel options support single-node Podman containers
 # and pure nftables-based network stack.
 # Completely removes dependencies on iptables/xtables and compat layers.
+#
+# NOTE: Must run AFTER tier 06 (depends on 00-common.sh and prior config state).
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -37,6 +39,7 @@ enable_opt_m() {
 
 # --- Base Cgroups / Namespaces (Podman runtime foundation) ---
 enable_opt_y CONFIG_NAMESPACES
+enable_opt_y CONFIG_NET_NS
 enable_opt_y CONFIG_USER_NS
 enable_opt_y CONFIG_SECCOMP
 enable_opt_y CONFIG_SECCOMP_FILTER

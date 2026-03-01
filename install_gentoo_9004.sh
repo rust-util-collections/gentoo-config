@@ -529,6 +529,7 @@ info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
     app-editors/neovim \
     app-shells/zsh \
+    dev-vcs/git \
     net-misc/dhcpcd \
     net-misc/openssh \
     sys-process/htop \
