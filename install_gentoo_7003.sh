@@ -11,7 +11,7 @@
 #   Boot from a Fedora/Ubuntu live USB, set up network, then run:
 #
 #     sudo -i
-#     apt-get install -y git || dnf install -y git
+#     apt install -y git || dnf install -y git
 #     git clone https://gitee.com/kt10/gentoo-config.git && cd gentoo-config
 #
 #     export TARGET_DISK="/dev/sda"
@@ -58,7 +58,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # If running outside the repo (e.g. user downloaded the script alone), clone it
 if [[ ! -d "${SCRIPT_DIR}/.git" ]]; then
-    command -v git >/dev/null || { apt-get install -y git 2>/dev/null || dnf install -y git 2>/dev/null || true; }
+    command -v git >/dev/null || { apt install -y git 2>/dev/null || dnf install -y git 2>/dev/null || true; }
     CLONE_DIR="/tmp/gentoo-config"
     rm -rf "${CLONE_DIR}"
     git clone "${REPO_URL}" "${CLONE_DIR}"
@@ -98,7 +98,7 @@ for cmd in wget parted mkfs.btrfs mkfs.vfat; do
             mkfs.vfat) pkg="dosfstools" ;;
             *) pkg="${cmd}" ;;
         esac
-        apt-get install -y "${pkg}" 2>/dev/null || dnf install -y "${pkg}" 2>/dev/null || true
+        apt install -y "${pkg}" 2>/dev/null || dnf install -y "${pkg}" 2>/dev/null || true
     fi
 done
 

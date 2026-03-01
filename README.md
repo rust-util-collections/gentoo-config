@@ -15,7 +15,7 @@ Boot from a Fedora/Ubuntu live USB, set up network, then:
 
 ```shell
 sudo -i
-apt-get install -y git || dnf install -y git
+apt install -y git || dnf install -y git
 git clone https://gitee.com/kt10/gentoo-config.git && cd gentoo-config
 
 export TARGET_DISK="/dev/sda"
