@@ -58,9 +58,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # If running outside the repo (e.g. user downloaded the script alone), clone it
 if [[ ! -d "${SCRIPT_DIR}/.git" ]]; then
-    for cmd in git; do
-        command -v "${cmd}" >/dev/null || { apt-get install -y "${cmd}" 2>/dev/null || dnf install -y "${cmd}" 2>/dev/null || true; }
-    done
+    command -v git >/dev/null || { apt-get install -y git 2>/dev/null || dnf install -y git 2>/dev/null || true; }
     CLONE_DIR="/tmp/gentoo-config"
     rm -rf "${CLONE_DIR}"
     git clone "${REPO_URL}" "${CLONE_DIR}"
@@ -172,7 +170,7 @@ mkdir -p "${MOUNT_POINT}"
 if mountpoint -q "${MOUNT_POINT}" 2>/dev/null; then
     info "  ${MOUNT_POINT} already mounted, skipping"
 else
-    mount -o defaults,noatime,ssd "${ROOT_PART}" "${MOUNT_POINT}"
+    mount -o noatime,ssd,defaults "${ROOT_PART}" "${MOUNT_POINT}"
 fi
 mkdir -p "${MOUNT_POINT}/boot/efi"
 if mountpoint -q "${MOUNT_POINT}/boot/efi" 2>/dev/null; then
@@ -208,8 +206,13 @@ else
     rm -f "${STAGE3_FILE}"
     wget "${STAGE3_FULL_URL}" -O "${STAGE3_FILE}"
 
+    info "Verifying stage3 checksum..."
+    wget -q "${STAGE3_FULL_URL}.sha256" -O "${STAGE3_FILE}.sha256"
+    sha256sum -c "${STAGE3_FILE}.sha256" || error "Stage3 SHA256 verification failed!"
+    rm -f "${STAGE3_FILE}.sha256"
+
     info "Extracting stage3..."
-    tar xpf "${STAGE3_FILE}" --numeric-owner
+    tar xpf "${STAGE3_FILE}" --xattrs-include='*.*' --numeric-owner
     rm -f "${STAGE3_FILE}"
 fi
 
@@ -221,13 +224,10 @@ info "Step 5: Configuring make.conf..."
 cat > "${MOUNT_POINT}/etc/portage/make.conf" << 'MAKECONF'
 CFLAGS="-march=znver3 -O2 -pipe"
 CXXFLAGS="${CFLAGS}"
-CHOST="x86_64-pc-linux-gnu"
 
 USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs -webdav -ruby -lua -introspection -test"
 
 CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
-
-FEATURES="splitdebug"
 
 ABI_X86="64"
 GRUB_PLATFORMS="efi-64"
@@ -240,7 +240,6 @@ ACCEPT_KEYWORDS="amd64"
 L10N="en-US zh-CN"
 
 PORTAGE_TMPDIR='/tmp'
-BUILD_PREFIX='/tmp/portage'
 
 PORTDIR="/usr/portage"
 DISTDIR="${PORTDIR}/distfiles"
@@ -302,8 +301,7 @@ else
     if [[ -f "${KERNEL_CONFIG_FILE}" ]]; then
         cp "${KERNEL_CONFIG_FILE}" "${MOUNT_POINT}/tmp/kernel.config"
     else
-        warn "No kernel config found, will use default"
-        touch "${MOUNT_POINT}/tmp/kernel.config"
+        error "No kernel config found at ${KERNEL_CONFIG_FILE}. Set KERNEL_CONFIG_URL or place config in repo."
     fi
 fi
 
@@ -332,6 +330,7 @@ fi
 #######################################
 info "Step 11: Copying zshrc files..."
 
+mkdir -p "${MOUNT_POINT}/tmp/gentoo_setup_files"
 if [[ -f "${SCRIPT_DIR}/shell/zshrc" ]]; then
     cp "${SCRIPT_DIR}/shell/zshrc" "${MOUNT_POINT}/tmp/gentoo_setup_files/zshrc"
 fi
@@ -466,6 +465,7 @@ emerge -q --noreplace sys-fs/btrfs-progs sys-fs/dosfstools sys-boot/grub sys-boo
 info "[chroot] Configuring installkernel USE flags..."
 mkdir -p /etc/portage/package.use
 echo "sys-kernel/installkernel dracut" > /etc/portage/package.use/installkernel
+mkdir -p /etc/portage/package.mask
 echo "dev-lang/ruby" > /etc/portage/package.mask/ruby # avoid soft deps
 emerge -q --noreplace sys-kernel/installkernel
 
@@ -487,8 +487,6 @@ eselect kernel set 1
 #--- Compile kernel ---
 KERNEL_SRC="/usr/src/linux"
 [[ -d "${KERNEL_SRC}" ]] || error "No kernel source found in /usr/src"
-KERNEL_VERSION=$(basename "$(readlink -f "${KERNEL_SRC}")" | sed 's/linux-//')
-
 if ls /boot/vmlinuz-* >/dev/null 2>&1; then
     info "[chroot] Kernel already compiled and installed, skipping"
 else
