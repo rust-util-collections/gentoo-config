@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 一键应用全部 7 个 tier (最大精简版)
+# Apply all 8 tiers (maximum cleanup + Podman enablement)
 #
 # Usage: ./apply-all.sh <path-to-.config>
 #
-# 建议: 逐 tier 应用更安全。此脚本仅在你确认每个 tier 都没问题后使用。
+# Recommendation: Applying tier by tier is safer. Only use this script
+# once you are confident that each individual tier works properly.
 # =============================================================================
 
 set -euo pipefail
@@ -17,8 +18,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 count_before=$(grep -c '=y\|=m' "$CONFIG" || true)
 
-for tier in 01 02 03 04 05 06 07; do
-    script="$SCRIPT_DIR/${tier}-remove-*.sh"
+for tier in 01 02 03 04 05 06 07 08; do
+    script="$SCRIPT_DIR/${tier}-*.sh"
     # shellcheck disable=SC2086
     bash $script "$CONFIG"
 done
@@ -34,6 +35,6 @@ echo "========================================="
 echo ""
 echo "Next steps:"
 echo "  cd /usr/src/linux"
-echo "  make olddefconfig     # 清理级联依赖"
-echo "  make -j\$(nproc)       # 编译"
-echo "  # 安装、重启、测试 SSH/nftables/基础功能"
+echo "  make olddefconfig     # Clean up cascaded dependencies"
+echo "  make -j\$(nproc)       # Compile"
+echo "  # Install, reboot, and test SSH/nftables/Podman functionality"

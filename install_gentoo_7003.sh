@@ -531,16 +531,11 @@ info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
     app-editors/neovim \
     app-shells/zsh \
-    sys-apps/mlocate \
     net-misc/dhcpcd \
     net-misc/openssh \
-    dev-vcs/git \
     sys-process/htop \
-    app-misc/tmux \
-    sys-apps/pciutils \
-    sys-apps/usbutils \
-    app-portage/eix \
-    app-portage/gentoolkit
+    app-containers/podman \
+    app-containers/netavark
 
 #--- Configure SSH (idempotent: match both commented and uncommented lines) ---
 info "[chroot] Configuring SSH..."
@@ -630,6 +625,15 @@ else
     useradd -m -G wheel,audio,video,portage,usb -s /bin/zsh "${USER_NAME}"
 fi
 echo "${USER_NAME}:${USER_PASSWORD}" | chpasswd
+
+#--- Configure subuid/subgid for rootless Podman ---
+info "[chroot] Configuring subuid/subgid for rootless Podman..."
+if ! grep -q "^${USER_NAME}:" /etc/subuid; then
+    echo "${USER_NAME}:100000:65536" >> /etc/subuid
+fi
+if ! grep -q "^${USER_NAME}:" /etc/subgid; then
+    echo "${USER_NAME}:100000:65536" >> /etc/subgid
+fi
 
 #--- Set root shell to zsh ---
 chsh -s /bin/zsh root
@@ -743,11 +747,6 @@ chown "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/dev"
 #--- Final dependency cleanup and distfiles purge ---
 info "[chroot] Final dependency cleanup..."
 emerge --depclean -q || true
-eclean-dist -d 2>/dev/null || true
-
-#--- Update eix database ---
-info "[chroot] Updating eix database..."
-eix-update
 
 #--- Cleanup ---
 info "[chroot] Cleaning up..."

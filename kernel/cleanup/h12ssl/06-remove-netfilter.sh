@@ -1,26 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Tier 06 - Netfilter 精简 (仅保留 nftables 核心)
+# Tier 06 - Netfilter cleanup (keep only nftables core)
 #
-# 针对 EPYC_7773x_supermicro_h12_ssl，7003 config 已无 iptables / ip6tables /
-# IP_VS / IP_SET，比 9004 轻得多。主要清理:
-#   - BRIDGE + 相关 (无容器/桥接)
-#   - VLAN_8021Q / IPVLAN / MACVLAN (无 VLAN/容器虚拟网络)
-#   - NF_FLOW_TABLE 系列 (流量卸载，路由器功能，服务器不需要)
-#   - NF_DUP / NF_SOCKET / NF_TPROXY (包复制/透明代理)
-#   - NFT 扩展模块: SYNPROXY / TUNNEL / XFRM / QUEUE / QUOTA /
-#                   HASH / NUMGEN / OSF / SOCKET / TPROXY /
-#                   FLOW_OFFLOAD / DUP / FWD_NETDEV / FIB_NETDEV
-#   - NETFILTER_NETLINK 附属: ACCT / OSF / QUEUE
-#   - NETFILTER_SYNPROXY / CONNCOUNT
-#   - NF_CONNTRACK 杂项: LABELS / PROCFS (基础 conntrack 本身保留)
+# Removes IPVS, ipset, iptables/ip6tables, old conntrack helpers,
+# unused nft modules, all xtables match/targets, bridge netfilter.
 #
-# 保留: NF_TABLES + INET/IPV4/IPV6/ARP, NF_CONNTRACK (core), NF_NAT (core),
-#       NF_NAT_MASQUERADE, NFT_CT/LOG/LIMIT/COUNTER/CONNLIMIT,
-#       NFT_NAT/MASQ/REJECT(+INET/IPV4/IPV6), NFT_FIB(+INET/IPV4/IPV6),
-#       NF_REJECT_IPV4/IPV6, NF_DEFRAG_IPV4/IPV6, NF_LOG_*,
-#       NETFILTER_NETLINK / NETLINK_LOG / NETFILTER_INGRESS,
-#       NETFILTER_FAMILY_ARP
+# Keeps: NF_TABLES, NFT_CT/LOG/LIMIT/NAT/MASQ/REJECT/FIB/COMPAT,
+#        NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -28,74 +14,212 @@ source "$SCRIPT_DIR/00-common.sh"
 
 echo "[Tier 06] Stripping netfilter to nftables-only..."
 
-# --- Bridge 子系统 (无容器/桥接) ---
-# 级联消失: BRIDGE_IGMP_SNOOPING / BRIDGE_VLAN_FILTERING /
-#           NF_TABLES_BRIDGE / NFT_BRIDGE_META / NFT_BRIDGE_REJECT /
-#           NETFILTER_FAMILY_BRIDGE
-disable_opt CONFIG_BRIDGE
-disable_opt CONFIG_NF_TABLES_BRIDGE
+# --- IPVS subsystem (kernel level load balancing, remove entirely) ---
+disable_opt CONFIG_IP_VS
 
-# --- Per-device nftables hooks (无 NETDEV 层过滤需求) ---
-# 级联消失: NFT_DUP_NETDEV / NFT_FWD_NETDEV / NFT_FIB_NETDEV
-disable_opt CONFIG_NF_TABLES_NETDEV
+# --- ipset subsystem ---
+disable_opt CONFIG_IP_SET
 
-# --- VLAN / 虚拟网络接口 (无 VLAN/容器虚拟网络) ---
-disable_opt CONFIG_VLAN_8021Q
-disable_opt CONFIG_IPVLAN
-# IPVLAN_L3S 会随 IPVLAN 级联消失
-disable_opt CONFIG_MACVLAN
+# --- iptables ---
+disable_opt CONFIG_IP_NF_IPTABLES
+disable_opt CONFIG_IP_NF_FILTER
+disable_opt CONFIG_IP_NF_TARGET_REJECT
+disable_opt CONFIG_IP_NF_NAT
+disable_opt CONFIG_IP_NF_TARGET_MASQUERADE
+disable_opt CONFIG_IP_NF_MANGLE
+disable_opt CONFIG_IP_NF_RAW
+disable_opt CONFIG_IP_NF_MATCH_AH
+disable_opt CONFIG_IP_NF_MATCH_ECN
+disable_opt CONFIG_IP_NF_MATCH_RPFILTER
+disable_opt CONFIG_IP_NF_MATCH_TTL
+disable_opt CONFIG_IP_NF_TARGET_SYNPROXY
+disable_opt CONFIG_IP_NF_TARGET_NETMAP
+disable_opt CONFIG_IP_NF_TARGET_REDIRECT
+disable_opt CONFIG_IP_NF_TARGET_CLUSTERIP
+disable_opt CONFIG_IP_NF_TARGET_ECN
+disable_opt CONFIG_IP_NF_TARGET_TTL
 
-# --- Flow table 流量卸载 (路由器/NAT box 功能，服务器不需要) ---
-disable_opt CONFIG_NF_FLOW_TABLE
-disable_opt CONFIG_NF_FLOW_TABLE_INET
-disable_opt CONFIG_NF_FLOW_TABLE_IPV4
-disable_opt CONFIG_NF_FLOW_TABLE_IPV6
+# --- ip6tables ---
+disable_opt CONFIG_IP6_NF_IPTABLES
+disable_opt CONFIG_IP6_NF_FILTER
+disable_opt CONFIG_IP6_NF_TARGET_REJECT
+disable_opt CONFIG_IP6_NF_NAT
+disable_opt CONFIG_IP6_NF_TARGET_MASQUERADE
+disable_opt CONFIG_IP6_NF_MANGLE
+disable_opt CONFIG_IP6_NF_RAW
+disable_opt CONFIG_IP6_NF_MATCH_AH
+disable_opt CONFIG_IP6_NF_MATCH_EUI64
+disable_opt CONFIG_IP6_NF_MATCH_FRAG
+disable_opt CONFIG_IP6_NF_MATCH_OPTS
+disable_opt CONFIG_IP6_NF_MATCH_HL
+disable_opt CONFIG_IP6_NF_MATCH_IPV6HEADER
+disable_opt CONFIG_IP6_NF_MATCH_MH
+disable_opt CONFIG_IP6_NF_MATCH_SRH
+disable_opt CONFIG_IP6_NF_TARGET_HL
+disable_opt CONFIG_IP6_NF_TARGET_SYNPROXY
+disable_opt CONFIG_IP6_NF_TARGET_NPT
+
+# --- ARP tables ---
+disable_opt CONFIG_IP_NF_ARPTABLES
+disable_opt CONFIG_IP_NF_ARPFILTER
+disable_opt CONFIG_IP_NF_ARP_MANGLE
+
+# --- Conntrack protocol helpers (legacy protocols) ---
+disable_opt CONFIG_NF_CONNTRACK_AMANDA
+disable_opt CONFIG_NF_CONNTRACK_FTP
+disable_opt CONFIG_NF_CONNTRACK_H323
+disable_opt CONFIG_NF_CONNTRACK_IRC
+disable_opt CONFIG_NF_CONNTRACK_NETBIOS_NS
+disable_opt CONFIG_NF_CONNTRACK_SNMP
+disable_opt CONFIG_NF_CONNTRACK_PPTP
+disable_opt CONFIG_NF_CONNTRACK_SANE
+disable_opt CONFIG_NF_CONNTRACK_SIP
+disable_opt CONFIG_NF_CONNTRACK_TFTP
+disable_opt CONFIG_NF_CONNTRACK_BROADCAST
+disable_opt CONFIG_NF_CT_PROTO_DCCP
+disable_opt CONFIG_NF_CT_PROTO_GRE
+disable_opt CONFIG_NF_CT_PROTO_SCTP
+disable_opt CONFIG_NF_CT_PROTO_UDPLITE
+disable_opt CONFIG_NF_CONNTRACK_SECMARK
+disable_opt CONFIG_NF_CONNTRACK_ZONES
+disable_opt CONFIG_NF_CONNTRACK_TIMESTAMP
+disable_opt CONFIG_NF_CONNTRACK_LABELS
+disable_opt CONFIG_NETFILTER_CONNCOUNT
+
+# --- NAT helpers ---
+disable_opt CONFIG_NF_NAT_AMANDA
+disable_opt CONFIG_NF_NAT_FTP
+disable_opt CONFIG_NF_NAT_IRC
+disable_opt CONFIG_NF_NAT_SIP
+disable_opt CONFIG_NF_NAT_TFTP
+disable_opt CONFIG_NF_NAT_PPTP
+disable_opt CONFIG_NF_NAT_H323
+disable_opt CONFIG_NF_NAT_SNMP_BASIC
+disable_opt CONFIG_NF_NAT_OVS
+
+# --- Unneeded nftables modules ---
+disable_opt CONFIG_NFT_NUMGEN
 disable_opt CONFIG_NFT_FLOW_OFFLOAD
-
-# --- 包复制 ---
-disable_opt CONFIG_NF_DUP_IPV4
-disable_opt CONFIG_NF_DUP_IPV6
+disable_opt CONFIG_NFT_REDIR
+disable_opt CONFIG_NFT_TUNNEL
+disable_opt CONFIG_NFT_QUEUE
+disable_opt CONFIG_NFT_QUOTA
+disable_opt CONFIG_NFT_HASH
+disable_opt CONFIG_NFT_XFRM
+disable_opt CONFIG_NFT_SOCKET
+disable_opt CONFIG_NFT_TPROXY
+disable_opt CONFIG_NFT_SYNPROXY
 disable_opt CONFIG_NF_DUP_NETDEV
+disable_opt CONFIG_NFT_DUP_NETDEV
+disable_opt CONFIG_NFT_FWD_NETDEV
+disable_opt CONFIG_NFT_FIB_NETDEV
+disable_opt CONFIG_NFT_REJECT_NETDEV
 disable_opt CONFIG_NFT_DUP_IPV4
 disable_opt CONFIG_NFT_DUP_IPV6
-disable_opt CONFIG_NFT_DUP_NETDEV
+disable_opt CONFIG_NF_DUP_IPV4
+disable_opt CONFIG_NF_DUP_IPV6
+disable_opt CONFIG_NF_FLOW_TABLE
+disable_opt CONFIG_NF_FLOW_TABLE_INET
+disable_opt CONFIG_NF_TABLES_NETDEV
+disable_opt CONFIG_NETFILTER_SYNPROXY
+disable_opt CONFIG_NETFILTER_NETLINK_ACCT
+disable_opt CONFIG_NETFILTER_NETLINK_QUEUE
+disable_opt CONFIG_NETFILTER_NETLINK_OSF
 
-# --- 透明代理 / Socket 匹配 ---
+# --- All xtables match/targets (nftables does not need them) ---
+disable_opt CONFIG_NETFILTER_XT_TARGET_AUDIT
+disable_opt CONFIG_NETFILTER_XT_TARGET_CHECKSUM
+disable_opt CONFIG_NETFILTER_XT_TARGET_CLASSIFY
+disable_opt CONFIG_NETFILTER_XT_TARGET_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_CONNSECMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_CT
+disable_opt CONFIG_NETFILTER_XT_TARGET_DSCP
+disable_opt CONFIG_NETFILTER_XT_TARGET_HL
+disable_opt CONFIG_NETFILTER_XT_TARGET_HMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_IDLETIMER
+disable_opt CONFIG_NETFILTER_XT_TARGET_LOG
+disable_opt CONFIG_NETFILTER_XT_TARGET_MARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_MASQUERADE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NFLOG
+disable_opt CONFIG_NETFILTER_XT_TARGET_NFQUEUE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NOTRACK
+disable_opt CONFIG_NETFILTER_XT_TARGET_RATEEST
+disable_opt CONFIG_NETFILTER_XT_TARGET_REDIRECT
+disable_opt CONFIG_NETFILTER_XT_TARGET_REJECT
+disable_opt CONFIG_NETFILTER_XT_TARGET_SECMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_TCPMSS
+disable_opt CONFIG_NETFILTER_XT_TARGET_TCPOPTSTRIP
+disable_opt CONFIG_NETFILTER_XT_TARGET_TEE
+disable_opt CONFIG_NETFILTER_XT_TARGET_TPROXY
+disable_opt CONFIG_NETFILTER_XT_TARGET_TRACE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NETMAP
+disable_opt CONFIG_NETFILTER_XT_NAT
+disable_opt CONFIG_NETFILTER_XT_MARK
+disable_opt CONFIG_NETFILTER_XT_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_SET
+disable_opt CONFIG_NETFILTER_XT_MATCH_ADDRTYPE
+disable_opt CONFIG_NETFILTER_XT_MATCH_BPF
+disable_opt CONFIG_NETFILTER_XT_MATCH_CGROUP
+disable_opt CONFIG_NETFILTER_XT_MATCH_CLUSTER
+disable_opt CONFIG_NETFILTER_XT_MATCH_COMMENT
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNBYTES
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNLABEL
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNLIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNTRACK
+disable_opt CONFIG_NETFILTER_XT_MATCH_CPU
+disable_opt CONFIG_NETFILTER_XT_MATCH_DCCP
+disable_opt CONFIG_NETFILTER_XT_MATCH_DEVGROUP
+disable_opt CONFIG_NETFILTER_XT_MATCH_DSCP
+disable_opt CONFIG_NETFILTER_XT_MATCH_ECN
+disable_opt CONFIG_NETFILTER_XT_MATCH_ESP
+disable_opt CONFIG_NETFILTER_XT_MATCH_HASHLIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_HELPER
+disable_opt CONFIG_NETFILTER_XT_MATCH_HL
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPCOMP
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPRANGE
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPVS
+disable_opt CONFIG_NETFILTER_XT_MATCH_L2TP
+disable_opt CONFIG_NETFILTER_XT_MATCH_LENGTH
+disable_opt CONFIG_NETFILTER_XT_MATCH_LIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_MAC
+disable_opt CONFIG_NETFILTER_XT_MATCH_MULTIPORT
+disable_opt CONFIG_NETFILTER_XT_MATCH_NFACCT
+disable_opt CONFIG_NETFILTER_XT_MATCH_OSF
+disable_opt CONFIG_NETFILTER_XT_MATCH_OWNER
+disable_opt CONFIG_NETFILTER_XT_MATCH_PHYSDEV
+disable_opt CONFIG_NETFILTER_XT_MATCH_PKTTYPE
+disable_opt CONFIG_NETFILTER_XT_MATCH_POLICY
+disable_opt CONFIG_NETFILTER_XT_MATCH_QUOTA
+disable_opt CONFIG_NETFILTER_XT_MATCH_RATEEST
+disable_opt CONFIG_NETFILTER_XT_MATCH_REALM
+disable_opt CONFIG_NETFILTER_XT_MATCH_RECENT
+disable_opt CONFIG_NETFILTER_XT_MATCH_SCTP
+disable_opt CONFIG_NETFILTER_XT_MATCH_SOCKET
+disable_opt CONFIG_NETFILTER_XT_MATCH_STATE
+disable_opt CONFIG_NETFILTER_XT_MATCH_STATISTIC
+disable_opt CONFIG_NETFILTER_XT_MATCH_STRING
+disable_opt CONFIG_NETFILTER_XT_MATCH_TCPMSS
+disable_opt CONFIG_NETFILTER_XT_MATCH_TIME
+disable_opt CONFIG_NETFILTER_XT_MATCH_U32
+
+# --- Bridge netfilter (No containers/bridge needed usually here, but see tier 08) ---
+disable_opt CONFIG_BRIDGE
+disable_opt CONFIG_BRIDGE_NETFILTER
+disable_opt CONFIG_NF_TABLES_BRIDGE
+disable_opt CONFIG_NF_CONNTRACK_BRIDGE
+disable_opt CONFIG_BRIDGE_NF_EBTABLES
+disable_opt CONFIG_VLAN_8021Q
+
+# --- Transparent proxy / sockets ---
 disable_opt CONFIG_NF_SOCKET_IPV4
 disable_opt CONFIG_NF_SOCKET_IPV6
 disable_opt CONFIG_NF_TPROXY_IPV4
 disable_opt CONFIG_NF_TPROXY_IPV6
-disable_opt CONFIG_NFT_SOCKET
-disable_opt CONFIG_NFT_TPROXY
-
-# --- SYN proxy ---
-disable_opt CONFIG_NETFILTER_SYNPROXY
-disable_opt CONFIG_NFT_SYNPROXY
-
-# --- 不需要的 nftables 扩展模块 ---
-disable_opt CONFIG_NFT_TUNNEL       # GRE/VXLAN 隧道
-disable_opt CONFIG_NFT_XFRM        # IPsec 集成
-disable_opt CONFIG_NFT_QUEUE        # 用户态 nfqueue
-disable_opt CONFIG_NFT_QUOTA        # 配额管理
-disable_opt CONFIG_NFT_HASH         # hash 数据结构 (load balance 用)
-disable_opt CONFIG_NFT_NUMGEN       # 数字生成 (load balance 用)
-disable_opt CONFIG_NFT_OSF          # OS 指纹识别
-disable_opt CONFIG_NFT_OBJREF       # 命名对象引用
-disable_opt CONFIG_NFT_REDIR        # 端口重定向 (透明代理)
-disable_opt CONFIG_NFT_FWD_NETDEV   # per-device 转发 (随 NF_TABLES_NETDEV 消失)
-disable_opt CONFIG_NFT_FIB_NETDEV   # per-device FIB (随 NF_TABLES_NETDEV 消失)
-
-# --- NETFILTER_NETLINK 附属模块 ---
-disable_opt CONFIG_NETFILTER_NETLINK_ACCT   # 流量计费
-disable_opt CONFIG_NETFILTER_NETLINK_OSF    # OS 指纹
-disable_opt CONFIG_NETFILTER_NETLINK_QUEUE  # 用户态队列
-disable_opt CONFIG_NETFILTER_CONNCOUNT      # 连接数统计 (nft connlimit 用 NFT_CONNLIMIT 替代)
-
-# --- Conntrack 杂项 (保留 NF_CONNTRACK core / MARK) ---
-disable_opt CONFIG_NF_CONNTRACK_LABELS   # 标签 (容器/策略路由用)
-disable_opt CONFIG_NF_CONNTRACK_PROCFS   # 传统 /proc/net/ip_conntrack 接口
+disable_opt CONFIG_NETFILTER_FAMILY_ARP
+disable_opt CONFIG_NF_LOG_ARP
 
 count_after=$(grep -c '=y\|=m' "$CONFIG" || true)
 echo "[Tier 06] Done. $((count_before - count_after)) options disabled."
 echo "          Next: cd /usr/src/linux && make olddefconfig && make -j\$(nproc)"
-echo "          IMPORTANT: 应用后务必测试 nftables 规则是否正常加载!"
+echo "          IMPORTANT: Ensure nftables rules load properly after reboot!"

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Tier 06 - Netfilter 精简 (仅保留 nftables 核心)
+# Tier 06 - Netfilter cleanup (keep only nftables core)
 #
-# 删除 IPVS, ipset, iptables/ip6tables, 旧 conntrack helper,
-# 无用 nft 模块, 全部 xtables match/target, bridge netfilter
+# Removes IPVS, ipset, iptables/ip6tables, old conntrack helpers,
+# unused nft modules, all xtables match/targets, bridge netfilter.
 #
-# 保留: NF_TABLES, NFT_CT/LOG/LIMIT/NAT/MASQ/REJECT/FIB/COMPAT,
-#       NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK
+# Keeps: NF_TABLES, NFT_CT/LOG/LIMIT/NAT/MASQ/REJECT/FIB/COMPAT,
+#        NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,10 +14,10 @@ source "$SCRIPT_DIR/00-common.sh"
 
 echo "[Tier 06] Stripping netfilter to nftables-only..."
 
-# --- IPVS 子系统 (内核级负载均衡，整个删除) ---
+# --- IPVS subsystem (kernel level load balancing, remove entirely) ---
 disable_opt CONFIG_IP_VS
 
-# --- ipset 子系统 ---
+# --- ipset subsystem ---
 disable_opt CONFIG_IP_SET
 
 # --- iptables ---
@@ -64,7 +64,7 @@ disable_opt CONFIG_IP_NF_ARPTABLES
 disable_opt CONFIG_IP_NF_ARPFILTER
 disable_opt CONFIG_IP_NF_ARP_MANGLE
 
-# --- Conntrack 协议 helper (旧协议) ---
+# --- Conntrack protocol helpers (legacy protocols) ---
 disable_opt CONFIG_NF_CONNTRACK_AMANDA
 disable_opt CONFIG_NF_CONNTRACK_FTP
 disable_opt CONFIG_NF_CONNTRACK_H323
@@ -86,7 +86,7 @@ disable_opt CONFIG_NF_CONNTRACK_TIMESTAMP
 disable_opt CONFIG_NF_CONNTRACK_LABELS
 disable_opt CONFIG_NETFILTER_CONNCOUNT
 
-# --- NAT helper ---
+# --- NAT helpers ---
 disable_opt CONFIG_NF_NAT_AMANDA
 disable_opt CONFIG_NF_NAT_FTP
 disable_opt CONFIG_NF_NAT_IRC
@@ -97,7 +97,7 @@ disable_opt CONFIG_NF_NAT_H323
 disable_opt CONFIG_NF_NAT_SNMP_BASIC
 disable_opt CONFIG_NF_NAT_OVS
 
-# --- 不需要的 nftables 模块 ---
+# --- Unneeded nftables modules ---
 disable_opt CONFIG_NFT_NUMGEN
 disable_opt CONFIG_NFT_FLOW_OFFLOAD
 disable_opt CONFIG_NFT_REDIR
@@ -126,7 +126,7 @@ disable_opt CONFIG_NETFILTER_NETLINK_ACCT
 disable_opt CONFIG_NETFILTER_NETLINK_QUEUE
 disable_opt CONFIG_NETFILTER_NETLINK_OSF
 
-# --- 全部 xtables match/target (nftables 不需要) ---
+# --- All xtables match/targets (nftables does not need them) ---
 disable_opt CONFIG_NETFILTER_XT_TARGET_AUDIT
 disable_opt CONFIG_NETFILTER_XT_TARGET_CHECKSUM
 disable_opt CONFIG_NETFILTER_XT_TARGET_CLASSIFY
@@ -203,7 +203,7 @@ disable_opt CONFIG_NETFILTER_XT_MATCH_TCPMSS
 disable_opt CONFIG_NETFILTER_XT_MATCH_TIME
 disable_opt CONFIG_NETFILTER_XT_MATCH_U32
 
-# --- Bridge netfilter (不用容器/桥接) ---
+# --- Bridge netfilter (No containers/bridge needed usually here, but see tier 08) ---
 disable_opt CONFIG_BRIDGE
 disable_opt CONFIG_BRIDGE_NETFILTER
 disable_opt CONFIG_NF_TABLES_BRIDGE
@@ -211,7 +211,7 @@ disable_opt CONFIG_NF_CONNTRACK_BRIDGE
 disable_opt CONFIG_BRIDGE_NF_EBTABLES
 disable_opt CONFIG_VLAN_8021Q
 
-# --- Transparent proxy / socket ---
+# --- Transparent proxy / sockets ---
 disable_opt CONFIG_NF_SOCKET_IPV4
 disable_opt CONFIG_NF_SOCKET_IPV6
 disable_opt CONFIG_NF_TPROXY_IPV4
@@ -222,4 +222,4 @@ disable_opt CONFIG_NF_LOG_ARP
 count_after=$(grep -c '=y\|=m' "$CONFIG" || true)
 echo "[Tier 06] Done. $((count_before - count_after)) options disabled."
 echo "          Next: cd /usr/src/linux && make olddefconfig && make -j\$(nproc)"
-echo "          IMPORTANT: 应用后务必测试 nftables 规则是否正常加载!"
+echo "          IMPORTANT: Ensure nftables rules load properly after reboot!"
