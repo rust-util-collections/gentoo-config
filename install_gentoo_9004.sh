@@ -285,7 +285,7 @@ ROOT_UUID=$(blkid -s UUID -o value "${ROOT_PART}")
 
 cat > "${MOUNT_POINT}/etc/fstab" << FSTAB
 # <fs>          <mountpoint>    <type>      <opts>                          <dump/pass>
-UUID=${ROOT_UUID}   /           btrfs   defaults,noatime,ssd   0 0
+UUID=${ROOT_UUID}   /           btrfs   noatime,ssd,defaults   0 0
 UUID=${EFI_UUID}    /boot/efi   vfat    noauto,defaults                     0 0
 FSTAB
 
@@ -463,7 +463,8 @@ emerge -q --noreplace sys-fs/btrfs-progs sys-fs/dosfstools sys-boot/grub sys-boo
 #--- Install installkernel (with dracut + grub USE flags) ---
 info "[chroot] Configuring installkernel USE flags..."
 mkdir -p /etc/portage/package.use
-echo "sys-kernel/installkernel dracut grub" > /etc/portage/package.use/installkernel
+echo "sys-kernel/installkernel dracut" > /etc/portage/package.use/installkernel
+echo "dev-lang/ruby" > /etc/portage/package.mask/ruby # avoid soft deps
 emerge -q --noreplace sys-kernel/installkernel
 
 #--- Install kernel sources ---
@@ -513,7 +514,7 @@ if [[ -f /boot/grub/grub.cfg ]]; then
     info "[chroot] GRUB already configured, skipping"
 else
     # Clean up any existing "Gentoo" entries to avoid duplicates
-    efibootmgr | grep "Gentoo" | cut -d' ' -f1 | cut -c5-8 | xargs -I {} efibootmgr -b {} -B 2>/dev/null || true
+    efibootmgr | grep -i "Gentoo" | cut -d' ' -f1 | cut -c5-8 | xargs -I {} efibootmgr -b {} -B 2>/dev/null || true
 
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Gentoo
 
@@ -528,13 +529,10 @@ fi
 info "[chroot] Installing essential packages..."
 emerge -q --noreplace \
     app-editors/neovim \
-    app-shells/zsh \
     dev-vcs/git \
     net-misc/dhcpcd \
     net-misc/openssh \
-    sys-process/htop \
-    app-containers/podman \
-    app-containers/netavark
+    sys-process/htop
 
 #--- Configure SSH (idempotent: match both commented and uncommented lines) ---
 info "[chroot] Configuring SSH..."
@@ -621,7 +619,7 @@ if id "${USER_NAME}" &>/dev/null; then
     info "[chroot] User ${USER_NAME} already exists, skipping creation"
 else
     info "[chroot] Creating user ${USER_NAME}..."
-    useradd -m -G wheel,audio,video,portage,usb -s /bin/zsh "${USER_NAME}"
+    useradd -m -G wheel,audio,video,portage,usb -s /bin/bash "${USER_NAME}"
 fi
 echo "${USER_NAME}:${USER_PASSWORD}" | chpasswd
 
@@ -634,8 +632,8 @@ if ! grep -q "^${USER_NAME}:" /etc/subgid; then
     echo "${USER_NAME}:100000:65536" >> /etc/subgid
 fi
 
-#--- Set root shell to zsh ---
-chsh -s /bin/zsh root
+#--- Set root shell to bash ---
+chsh -s /bin/bash root
 
 #--- Deploy zshrc ---
 info "[chroot] Deploying zsh configs..."
