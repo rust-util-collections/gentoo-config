@@ -1,0 +1,27 @@
+CFLAGS="-march=znver3 -O2 -pipe"
+CXXFLAGS="${CFLAGS}"
+
+USE="-systemd -multilib -elogind -consolekit -X -wayland -iptables -firewalld -tcpd -gpm -cdda -sftp -tftp -ftp -pop3 -smtp -samba -ldap -doc -debug -emacs -webdav -ruby -lua -introspection -test"
+
+CPU_FLAGS_X86="aes avx avx2 avx512f avx512dq avx512cd avx512bw avx512vl avx512vbmi avx512vbmi2 avx512vnni avx512bitalg avx512vpopcntdq f16c fma3 mmx mmxext pclmul popcnt rdrand sha sse sse2 sse3 sse4_1 sse4_2 sse4a ssse3 vpclmulqdq"
+
+ABI_X86="64"
+GRUB_PLATFORMS="efi-64"
+
+LLVM_TARGETS="X86 BPF WebAssembly"
+
+ACCEPT_LICENSE="-* @FREE @BINARY-REDISTRIBUTABLE"
+ACCEPT_KEYWORDS="amd64"
+
+L10N="en-US zh-CN"
+
+# PORTAGE_TMPDIR='/tmp'
+
+PORTDIR="/usr/portage"
+DISTDIR="${PORTDIR}/distfiles"
+PKGDIR="${PORTDIR}/packages"
+PORTAGE_ELOG_CLASSES="info warn error log qa"
+PORTAGE_ELOG_SYSTEM="save"
+
+MAKEOPTS="-j24 -l24"
+GENTOO_MIRRORS="https://mirrors.ustc.edu.cn/gentoo"

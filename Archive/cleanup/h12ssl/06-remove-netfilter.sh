@@ -1,0 +1,226 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Tier 06 - Netfilter cleanup (keep only nftables core + Podman requirements)
+#
+# Removes IPVS, ipset, iptables/ip6tables, old conntrack helpers,
+# unused nft modules, all xtables match/targets.
+#
+# Keeps: NF_TABLES, NFT_CT/LOG/LIMIT/NAT/MASQ/REJECT/FIB/COMPAT,
+#        NF_CONNTRACK (core), NF_NAT (core), NETFILTER_NETLINK,
+#        BRIDGE, BRIDGE_NETFILTER (required by Podman/Netavark)
+# =============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/00-common.sh"
+
+echo "[Tier 06] Stripping netfilter to nftables-only..."
+
+# --- IPVS subsystem (kernel level load balancing, remove entirely) ---
+disable_opt CONFIG_IP_VS
+
+# --- ipset subsystem ---
+disable_opt CONFIG_IP_SET
+
+# --- iptables ---
+disable_opt CONFIG_IP_NF_IPTABLES
+disable_opt CONFIG_IP_NF_FILTER
+disable_opt CONFIG_IP_NF_TARGET_REJECT
+disable_opt CONFIG_IP_NF_NAT
+disable_opt CONFIG_IP_NF_TARGET_MASQUERADE
+disable_opt CONFIG_IP_NF_MANGLE
+disable_opt CONFIG_IP_NF_RAW
+disable_opt CONFIG_IP_NF_MATCH_AH
+disable_opt CONFIG_IP_NF_MATCH_ECN
+disable_opt CONFIG_IP_NF_MATCH_RPFILTER
+disable_opt CONFIG_IP_NF_MATCH_TTL
+disable_opt CONFIG_IP_NF_TARGET_SYNPROXY
+disable_opt CONFIG_IP_NF_TARGET_NETMAP
+disable_opt CONFIG_IP_NF_TARGET_REDIRECT
+disable_opt CONFIG_IP_NF_TARGET_CLUSTERIP
+disable_opt CONFIG_IP_NF_TARGET_ECN
+disable_opt CONFIG_IP_NF_TARGET_TTL
+
+# --- ip6tables ---
+disable_opt CONFIG_IP6_NF_IPTABLES
+disable_opt CONFIG_IP6_NF_FILTER
+disable_opt CONFIG_IP6_NF_TARGET_REJECT
+disable_opt CONFIG_IP6_NF_NAT
+disable_opt CONFIG_IP6_NF_TARGET_MASQUERADE
+disable_opt CONFIG_IP6_NF_MANGLE
+disable_opt CONFIG_IP6_NF_RAW
+disable_opt CONFIG_IP6_NF_MATCH_AH
+disable_opt CONFIG_IP6_NF_MATCH_EUI64
+disable_opt CONFIG_IP6_NF_MATCH_FRAG
+disable_opt CONFIG_IP6_NF_MATCH_OPTS
+disable_opt CONFIG_IP6_NF_MATCH_HL
+disable_opt CONFIG_IP6_NF_MATCH_IPV6HEADER
+disable_opt CONFIG_IP6_NF_MATCH_MH
+disable_opt CONFIG_IP6_NF_MATCH_SRH
+disable_opt CONFIG_IP6_NF_TARGET_HL
+disable_opt CONFIG_IP6_NF_TARGET_SYNPROXY
+disable_opt CONFIG_IP6_NF_TARGET_NPT
+
+# --- ARP tables ---
+disable_opt CONFIG_IP_NF_ARPTABLES
+disable_opt CONFIG_IP_NF_ARPFILTER
+disable_opt CONFIG_IP_NF_ARP_MANGLE
+
+# --- Conntrack protocol helpers (legacy protocols) ---
+disable_opt CONFIG_NF_CONNTRACK_AMANDA
+disable_opt CONFIG_NF_CONNTRACK_FTP
+disable_opt CONFIG_NF_CONNTRACK_H323
+disable_opt CONFIG_NF_CONNTRACK_IRC
+disable_opt CONFIG_NF_CONNTRACK_NETBIOS_NS
+disable_opt CONFIG_NF_CONNTRACK_SNMP
+disable_opt CONFIG_NF_CONNTRACK_PPTP
+disable_opt CONFIG_NF_CONNTRACK_SANE
+disable_opt CONFIG_NF_CONNTRACK_SIP
+disable_opt CONFIG_NF_CONNTRACK_TFTP
+disable_opt CONFIG_NF_CONNTRACK_BROADCAST
+disable_opt CONFIG_NF_CT_PROTO_DCCP
+disable_opt CONFIG_NF_CT_PROTO_GRE
+disable_opt CONFIG_NF_CT_PROTO_SCTP
+disable_opt CONFIG_NF_CT_PROTO_UDPLITE
+disable_opt CONFIG_NF_CONNTRACK_SECMARK
+disable_opt CONFIG_NF_CONNTRACK_ZONES
+disable_opt CONFIG_NF_CONNTRACK_TIMESTAMP
+disable_opt CONFIG_NF_CONNTRACK_LABELS
+disable_opt CONFIG_NETFILTER_CONNCOUNT
+
+# --- NAT helpers ---
+disable_opt CONFIG_NF_NAT_AMANDA
+disable_opt CONFIG_NF_NAT_FTP
+disable_opt CONFIG_NF_NAT_IRC
+disable_opt CONFIG_NF_NAT_SIP
+disable_opt CONFIG_NF_NAT_TFTP
+disable_opt CONFIG_NF_NAT_PPTP
+disable_opt CONFIG_NF_NAT_H323
+disable_opt CONFIG_NF_NAT_SNMP_BASIC
+disable_opt CONFIG_NF_NAT_OVS
+
+# --- Unneeded nftables modules ---
+disable_opt CONFIG_NFT_NUMGEN
+disable_opt CONFIG_NFT_FLOW_OFFLOAD
+disable_opt CONFIG_NFT_REDIR
+disable_opt CONFIG_NFT_TUNNEL
+disable_opt CONFIG_NFT_QUEUE
+disable_opt CONFIG_NFT_QUOTA
+disable_opt CONFIG_NFT_HASH
+disable_opt CONFIG_NFT_XFRM
+disable_opt CONFIG_NFT_SOCKET
+disable_opt CONFIG_NFT_TPROXY
+disable_opt CONFIG_NFT_SYNPROXY
+disable_opt CONFIG_NF_DUP_NETDEV
+disable_opt CONFIG_NFT_DUP_NETDEV
+disable_opt CONFIG_NFT_FWD_NETDEV
+disable_opt CONFIG_NFT_FIB_NETDEV
+disable_opt CONFIG_NFT_REJECT_NETDEV
+disable_opt CONFIG_NFT_DUP_IPV4
+disable_opt CONFIG_NFT_DUP_IPV6
+disable_opt CONFIG_NF_DUP_IPV4
+disable_opt CONFIG_NF_DUP_IPV6
+disable_opt CONFIG_NF_FLOW_TABLE
+disable_opt CONFIG_NF_FLOW_TABLE_INET
+disable_opt CONFIG_NF_TABLES_NETDEV
+disable_opt CONFIG_NETFILTER_SYNPROXY
+disable_opt CONFIG_NETFILTER_NETLINK_ACCT
+disable_opt CONFIG_NETFILTER_NETLINK_QUEUE
+disable_opt CONFIG_NETFILTER_NETLINK_OSF
+
+# --- All xtables match/targets (nftables does not need them) ---
+disable_opt CONFIG_NETFILTER_XT_TARGET_AUDIT
+disable_opt CONFIG_NETFILTER_XT_TARGET_CHECKSUM
+disable_opt CONFIG_NETFILTER_XT_TARGET_CLASSIFY
+disable_opt CONFIG_NETFILTER_XT_TARGET_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_CONNSECMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_CT
+disable_opt CONFIG_NETFILTER_XT_TARGET_DSCP
+disable_opt CONFIG_NETFILTER_XT_TARGET_HL
+disable_opt CONFIG_NETFILTER_XT_TARGET_HMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_IDLETIMER
+disable_opt CONFIG_NETFILTER_XT_TARGET_LOG
+disable_opt CONFIG_NETFILTER_XT_TARGET_MARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_MASQUERADE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NFLOG
+disable_opt CONFIG_NETFILTER_XT_TARGET_NFQUEUE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NOTRACK
+disable_opt CONFIG_NETFILTER_XT_TARGET_RATEEST
+disable_opt CONFIG_NETFILTER_XT_TARGET_REDIRECT
+disable_opt CONFIG_NETFILTER_XT_TARGET_REJECT
+disable_opt CONFIG_NETFILTER_XT_TARGET_SECMARK
+disable_opt CONFIG_NETFILTER_XT_TARGET_TCPMSS
+disable_opt CONFIG_NETFILTER_XT_TARGET_TCPOPTSTRIP
+disable_opt CONFIG_NETFILTER_XT_TARGET_TEE
+disable_opt CONFIG_NETFILTER_XT_TARGET_TPROXY
+disable_opt CONFIG_NETFILTER_XT_TARGET_TRACE
+disable_opt CONFIG_NETFILTER_XT_TARGET_NETMAP
+disable_opt CONFIG_NETFILTER_XT_NAT
+disable_opt CONFIG_NETFILTER_XT_MARK
+disable_opt CONFIG_NETFILTER_XT_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_SET
+disable_opt CONFIG_NETFILTER_XT_MATCH_ADDRTYPE
+disable_opt CONFIG_NETFILTER_XT_MATCH_BPF
+disable_opt CONFIG_NETFILTER_XT_MATCH_CGROUP
+disable_opt CONFIG_NETFILTER_XT_MATCH_CLUSTER
+disable_opt CONFIG_NETFILTER_XT_MATCH_COMMENT
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNBYTES
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNLABEL
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNLIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNMARK
+disable_opt CONFIG_NETFILTER_XT_MATCH_CONNTRACK
+disable_opt CONFIG_NETFILTER_XT_MATCH_CPU
+disable_opt CONFIG_NETFILTER_XT_MATCH_DCCP
+disable_opt CONFIG_NETFILTER_XT_MATCH_DEVGROUP
+disable_opt CONFIG_NETFILTER_XT_MATCH_DSCP
+disable_opt CONFIG_NETFILTER_XT_MATCH_ECN
+disable_opt CONFIG_NETFILTER_XT_MATCH_ESP
+disable_opt CONFIG_NETFILTER_XT_MATCH_HASHLIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_HELPER
+disable_opt CONFIG_NETFILTER_XT_MATCH_HL
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPCOMP
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPRANGE
+disable_opt CONFIG_NETFILTER_XT_MATCH_IPVS
+disable_opt CONFIG_NETFILTER_XT_MATCH_L2TP
+disable_opt CONFIG_NETFILTER_XT_MATCH_LENGTH
+disable_opt CONFIG_NETFILTER_XT_MATCH_LIMIT
+disable_opt CONFIG_NETFILTER_XT_MATCH_MAC
+disable_opt CONFIG_NETFILTER_XT_MATCH_MULTIPORT
+disable_opt CONFIG_NETFILTER_XT_MATCH_NFACCT
+disable_opt CONFIG_NETFILTER_XT_MATCH_OSF
+disable_opt CONFIG_NETFILTER_XT_MATCH_OWNER
+disable_opt CONFIG_NETFILTER_XT_MATCH_PHYSDEV
+disable_opt CONFIG_NETFILTER_XT_MATCH_PKTTYPE
+disable_opt CONFIG_NETFILTER_XT_MATCH_POLICY
+disable_opt CONFIG_NETFILTER_XT_MATCH_QUOTA
+disable_opt CONFIG_NETFILTER_XT_MATCH_RATEEST
+disable_opt CONFIG_NETFILTER_XT_MATCH_REALM
+disable_opt CONFIG_NETFILTER_XT_MATCH_RECENT
+disable_opt CONFIG_NETFILTER_XT_MATCH_SCTP
+disable_opt CONFIG_NETFILTER_XT_MATCH_SOCKET
+disable_opt CONFIG_NETFILTER_XT_MATCH_STATE
+disable_opt CONFIG_NETFILTER_XT_MATCH_STATISTIC
+disable_opt CONFIG_NETFILTER_XT_MATCH_STRING
+disable_opt CONFIG_NETFILTER_XT_MATCH_TCPMSS
+disable_opt CONFIG_NETFILTER_XT_MATCH_TIME
+disable_opt CONFIG_NETFILTER_XT_MATCH_U32
+
+# --- Bridge netfilter (partial) ---
+# CONFIG_BRIDGE and CONFIG_BRIDGE_NETFILTER are kept: required by Podman/Netavark.
+# The following are not needed for containers or pure nftables operation:
+disable_opt CONFIG_NF_TABLES_BRIDGE
+disable_opt CONFIG_NF_CONNTRACK_BRIDGE
+disable_opt CONFIG_BRIDGE_NF_EBTABLES
+disable_opt CONFIG_VLAN_8021Q
+
+# --- Transparent proxy / sockets ---
+disable_opt CONFIG_NF_SOCKET_IPV4
+disable_opt CONFIG_NF_SOCKET_IPV6
+disable_opt CONFIG_NF_TPROXY_IPV4
+disable_opt CONFIG_NF_TPROXY_IPV6
+disable_opt CONFIG_NETFILTER_FAMILY_ARP
+disable_opt CONFIG_NF_LOG_ARP
+
+count_after=$(grep -c '=y\|=m' "$CONFIG" || true)
+echo "[Tier 06] Done. $((count_before - count_after)) options disabled."
+echo "          Next: cd /usr/src/linux && make olddefconfig && make -j\$(nproc)"
+echo "          IMPORTANT: Ensure nftables rules load properly after reboot!"

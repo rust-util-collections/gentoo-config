@@ -1,1 +1,0 @@
-app-emulation/qemu vhost-net -nls -iscsi -nfs -opengl -jpeg -png -usb usbredir -curl -selinux spice -ncurses -sdl -gtk -xen -alsa -bluetooth

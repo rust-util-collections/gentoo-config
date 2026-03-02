@@ -464,7 +464,7 @@ emerge -q --noreplace sys-fs/btrfs-progs sys-fs/dosfstools sys-boot/grub sys-boo
 #--- Install installkernel (with dracut + grub USE flags) ---
 info "[chroot] Configuring installkernel USE flags..."
 mkdir -p /etc/portage/package.use
-echo "sys-kernel/installkernel dracut" > /etc/portage/package.use/installkernel
+echo "sys-kernel/installkernel dracut -grub" > /etc/portage/package.use/installkernel
 mkdir -p /etc/portage/package.mask
 echo "dev-lang/ruby" > /etc/portage/package.mask/ruby # avoid soft deps
 emerge -q --noreplace sys-kernel/installkernel
@@ -668,6 +668,12 @@ if [[ -f /tmp/gentoo_setup_files/htoprc ]]; then
     cp /tmp/gentoo_setup_files/htoprc "/home/${USER_NAME}/.config/htop/htoprc"
     chown -R "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/.config/htop"
 fi
+
+#--- Deploy tmux config (mouse scroll support) ---
+info "[chroot] Deploying tmux config..."
+echo "set -g mouse on" > /root/.tmux.conf
+echo "set -g mouse on" > "/home/${USER_NAME}/.tmux.conf"
+chown "${USER_NAME}:${USER_NAME}" "/home/${USER_NAME}/.tmux.conf"
 
 #--- Write /etc/motd and /usr/local/etc/gentoo-tips ---
 info "[chroot] Writing /etc/motd and /usr/local/etc/gentoo-tips..."
