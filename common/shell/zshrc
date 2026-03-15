@@ -7,7 +7,7 @@ alias .="source"
 alias h="history 1"
 
 # alias gemini="gemini --model gemini-3-flash-preview"
-alias gc='gemini --yolo -p "Check `git diff HEAD`, commit changes"'
+alias gc="gemini --model gemini-3-flash-preview --yolo -p 'Check \`git diff HEAD\`, commit changes'"
 
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=zh_CN.UTF-8
