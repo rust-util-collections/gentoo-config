@@ -1,60 +1,54 @@
-"===================通用配置======================
+"=================== General Config ======================
 set encoding=utf-8
 
-set statusline=%F%=[Line:%l/%L,Column:%c] "显示文件名、行数
-"set statusline=[%F]%r%m%*%=[Line:%l/%L,Column:%c][%p%%] "显示文件名：总行数，总的字符数
-set ruler "在编辑过程中，在右下角显示光标位置的状态行
+set statusline=%F%=[Line:%l/%L,Column:%c]
+set ruler
 
-" 控制
-set nocompatible              "关闭vi兼容
-filetype off                  "关闭文件类型侦测,vundle需要
-set fileencodings=utf-8       "使用utf-8
-"syntax on                     "语法高亮
-set backspace=2               "退格键正常模式
-"set whichwrap=<,>,[,]         "当光标到行首或行尾，允许左右方向键换行
-set autoread                  "文件在vim外修改过，自动重载      
-set nobackup                  "不使用备份
-set confirm                   "在处理未保存或只读文件时，弹出确认消息   
-set scrolloff=3               "光标移动到距离顶部或底部开始滚到距离
-set history=1000              "历史记录数
-set mouse=                    "关闭鼠标
-set selection=inclusive       "选择包含最后一个字符
-set selectmode=mouse,key      "启动选择模式的方式
-"set completeopt=longest,menu  "智能补全,弹出菜单，无歧义时才自动填充
-set noswapfile                "关闭交换文件
-set hidden                    "允许在有未保存的修改时切换缓冲区
+" Control
+set nocompatible
+filetype off
+set fileencodings=utf-8
+set backspace=2
+set autoread
+set nobackup
+set confirm
+set scrolloff=3
+set history=1000
+set mouse=
+set selection=inclusive
+set selectmode=mouse,key
+set noswapfile
+set hidden
 
-"set t_Co=65536                  "可以使用的颜色数目
-set number                    "显示行号
-set laststatus=2              "显示状态行
-set ruler                     "显示标尺
-set showcmd                   "显示输入的命令
-set showmatch                 "高亮括号匹配
-set matchtime=1               "匹配括号高亮的时间(十分之一秒)
-set matchpairs={:},(:),[:],<:>        "匹配括号"{}"()"...等    
-set hlsearch                  "检索时高亮匹配项
-set incsearch                 "边检索边显示匹配
+set number
+set laststatus=2
+set ruler
+set showcmd
+set showmatch
+set matchtime=1
+set matchpairs={:},(:),[:],<:>
+set hlsearch
+set incsearch
 
-"格式
-set noexpandtab               "不要将tab转换为空格
-set shiftwidth=4              "自动缩进的距离,也是平移字符的距离
-set tabstop=4                 "tab键对应的空格数
-set autoindent                "自动缩进
-set smartindent               "智能缩进
+" Format
+set noexpandtab
+set shiftwidth=4
+set tabstop=4
+set autoindent
+set smartindent
 
-"===================按键映射======================
+"=================== Key Mappings ======================
 
-"按键映射的起始字符
-let mapleader = '\'             
+let mapleader = '\'
 
-"使用Ctrl-l 和 Ctrl+h 切换标签页
+" Use Ctrl-l and Ctrl-h to switch tabs
 nnoremap <C-l> gt            
 nnoremap <C-h> gT
 "open and close tab
 nnoremap <C-n> :tabnew<CR>
 nnoremap <C-k> :tabc<CR>
 
-"===================插件配置======================
+"=================== Plugins ======================
 
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
@@ -101,7 +95,7 @@ Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 
 call plug#end()
 
-""配色方案
+" Colorscheme
 set termguicolors
 set background=dark
 let g:everforest_background = 'medium' "Available values:   `'hard'`, `'medium'`, `'soft'`
@@ -186,12 +180,11 @@ lua <<EOF
   local cmp_nvim_lsp = safe_require('cmp_nvim_lsp')
   local capabilities = cmp_nvim_lsp and cmp_nvim_lsp.default_capabilities() or vim.lsp.protocol.make_client_capabilities()
   
-  -- 定义 on_attach 函数，在这里设置 LSP 快捷键
-  local on_attach = function(client, bufnr) 
-    local opts = { noremap=true, silent=true, buffer=bufnr } 
+  -- Define on_attach function to set LSP keybindings
+  local on_attach = function(client, bufnr)
+    local opts = { noremap=true, silent=true, buffer=bufnr }
 
-    -- 设置快捷键 <leader>d 来跳转到定义
-    -- vim.keymap.set('n', '<leader>d', vim.lsp.buf.definition, opts)
+    -- Jump to definition with ;;
     vim.keymap.set('n', ';;', vim.lsp.buf.definition, opts)
   end
 
@@ -257,14 +250,14 @@ if status_tree then
         group_empty = true,
         icons = {
           show = {
-            file = false,          -- 不显示文件图标
-            folder = false,        -- 不显示文件夹图标
-            git = false,           -- 不显示 git 状态图标
+            file = false,
+            folder = false,
+            git = false,
           },
           glyphs = {
             folder = {
-              arrow_closed = "+", -- 闭合文件夹
-              arrow_open = "-",   -- 展开文件夹
+              arrow_closed = "+",
+              arrow_open = "-",
             }
           }
         },
@@ -281,7 +274,7 @@ EOF
 nnoremap <F3> :NvimTreeToggle<CR> 
 "nnoremap <Leader>o :NERDTreeFind<CR>
 
-"===================Treesitter 配置======================
+"=================== Treesitter ======================
 lua <<EOF
 local status_ts, configs = pcall(require, "nvim-treesitter.configs")
 if not status_ts then
@@ -290,10 +283,7 @@ end
 
 if status_ts then
     configs.setup {
-      -- 确保 go, lua, vim, python 的解析器已安装
       ensure_installed = { "go", "lua", "vim", "python" },
-
-      -- 启用语法高亮
       highlight = {
         enable = true,
       },
@@ -301,10 +291,10 @@ if status_ts then
 end
 EOF
 
-"===================Go 特定配置======================
-" 保存 Go 文件时自动格式化
+"=================== Go ======================
+" Auto format on save
 autocmd BufWritePre *.go lua vim.lsp.buf.format({ async = true })
 
-"===================Python 特定配置======================
-" 保存 Python 文件时自动格式化
+"=================== Python ======================
+" Auto format on save
 autocmd BufWritePre *.py lua vim.lsp.buf.format({ async = true })

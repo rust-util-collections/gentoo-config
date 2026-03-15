@@ -20,20 +20,20 @@ export SAVEHIST=$HISTSIZE
 export EDITOR=vim
 export EIX_LIMIT_COMPACT=0
 
-# 启动自动补全
+# enable auto-completion
 autoload -U compinit
 compinit
-# 以更悦目的格式显示补全信息
+# completion style
 zstyle ':completion:*:descriptions' format '%U%B%d%b%u'
 zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
 
-# 载入主提示符主题
+# load prompt theme
 autoload -U promptinit
 promptinit
-# 比较悦目的主题还有：gentoo、walters、adam2 等
+# other nice themes: gentoo, walters, adam2
 prompt redhat
 
-# 忽略所有重复的历史记录
+# ignore duplicate history entries
 setopt hist_ignore_all_dups
 
 set -o vi

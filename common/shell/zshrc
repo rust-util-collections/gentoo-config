@@ -34,21 +34,35 @@ export SAVEHIST=$HISTSIZE
 export EDITOR=vim
 export EIX_LIMIT_COMPACT=0
 
-# 启动自动补全
+# enable auto-completion
 autoload -U compinit
 compinit
-# 以更悦目的格式显示补全信息
+# completion style
 zstyle ':completion:*:descriptions' format '%U%B%d%b%u'
 zstyle ':completion:*:warnings' format '%BSorry, no matches for: %d%b'
 
-# 载入主提示符主题
+# load prompt theme
 autoload -U promptinit
 promptinit
-# 比较悦目的主题还有：gentoo、walters、adam2 等
+
+# other nice themes: gentoo, walters, adam2
 prompt clint
 # prompt redhat
 
-# 忽略所有重复的历史记录
+# vcs_info for git branch display
+autoload -Uz add-zsh-hook vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:git:*' formats '(git)-[%b]-'
+add-zsh-hook precmd vcs_info
+setopt prompt_subst
+
+# custom platform display: [amd64/freebsd-14.4]
+local _p_plat="[%F{cyan}${MACHTYPE}/freebsd-$(uname -r | cut -d- -f1)%F{red}]"
+PROMPT="[%F{cyan}%D{%a %y/%m/%d %R %Z}%F{red}][%F{green}%l%F{red}]${_p_plat}
+%F{red}{%F{green}%n@%m%F{white}:%F{yellow}%~%F{red}}
+%fzsh %B%h%b %(?..[%?] )\${vcs_info_msg_0_}%B%#%b "
+
+# ignore duplicate history entries
 setopt hist_ignore_all_dups
 
 set -o vi
