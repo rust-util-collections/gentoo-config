@@ -1,6 +1,6 @@
-# gentoo-config
+# unix-config
 
-Configuration files and one-click installation scripts for Gentoo Linux on AMD EPYC workstations.
+Configuration files for Unix-like systems (Gentoo Linux, FreeBSD, etc.).
 
 ## One-click installation
 
@@ -8,25 +8,25 @@ Two scripts are provided for different EPYC generations:
 
 | Script | Platform | Arch | Boot method |
 |--------|----------|------|-------------|
-| `install_gentoo_9004.sh` | EPYC 9004 (Genoa) / Supermicro H13SSL | znver4 | efibootmgr (no initramfs) |
-| `install_gentoo_7003.sh` | EPYC 7003 (Milan) / Supermicro H12SSL | znver3 | GRUB + dracut (initramfs required) |
+| `gentoo/install_gentoo_9004.sh` | EPYC 9004 (Genoa) / Supermicro H13SSL | znver4 | efibootmgr (no initramfs) |
+| `gentoo/install_gentoo_7003.sh` | EPYC 7003 (Milan) / Supermicro H12SSL | znver3 | GRUB + dracut (initramfs required) |
 
 Boot from a Fedora/Ubuntu live USB, set up network, then:
 
 ```shell
 sudo -i
 apt install -y git || dnf install -y git
-git clone https://gitee.com/kt10/gentoo-config.git && cd gentoo-config
+git clone https://gitee.com/kt10/unix-config.git && cd unix-config
 
 export TARGET_DISK="/dev/sda"
 export ROOT_PASSWORD="your_root_password"
 export HOSTNAME="epyc"
 
 # EPYC 9004 series (Genoa) / H13SSL:
-bash install_gentoo_9004.sh
+bash gentoo/install_gentoo_9004.sh
 
 # EPYC 7003 series (Milan) / H12SSL:
-bash install_gentoo_7003.sh
+bash gentoo/install_gentoo_7003.sh
 ```
 
 ### Optional environment variables
@@ -45,14 +45,23 @@ bash install_gentoo_7003.sh
 ## Directory structure
 
 ```
-portage/          Portage make.conf files (main, GNU toolchain, musl)
-kernel/           Kernel configs for EPYC 9474F / 7773X on Supermicro boards
-shell/            zshrc for regular user and root
-nvim/             Neovim config (init.vim)
-fonts/            Monaco.ttf
-input/            Input method tables (wubi98)
-docs/             Notes on crossdev, Docker, networking, etc.
-archive/          Old / unused config files
+gentoo/                   Gentoo Linux specific
+  portage/                Portage make.conf files (main, GNU toolchain, musl)
+  kernel/                 Kernel configs for EPYC 9474F / 7773X on Supermicro boards
+  install_gentoo_*.sh     One-click install scripts
+
+freebsd/                  FreeBSD specific
+  make.conf               Ports build options
+
+common/                   Cross-platform configs
+  shell/                  zshrc for regular user and root
+  nvim/                   Neovim config (init.vim)
+  Fonts/                  Monaco.ttf
+  Input/                  Input method tables (wubi98)
+  Docs/                   Notes on crossdev, Docker, networking, etc.
+  htop/                   htop config
+
+Archive/                  Old / unused config files
 ```
 
 ## Development environment (LSP)
@@ -67,6 +76,6 @@ npm install -g pyright
 
 ## Reference docs
 
-- [Crossdev / musl cross-compilation](docs/crossdev.md)
-- [Docker kernel modules](docs/docker.md)
-- [Tips (passwords, etc.)](docs/tips.md)
+- [Crossdev / musl cross-compilation](common/Docs/crossdev.md)
+- [Docker kernel modules](common/Docs/docker.md)
+- [Tips (passwords, etc.)](common/Docs/tips.md)
