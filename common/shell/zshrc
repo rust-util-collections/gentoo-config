@@ -56,8 +56,8 @@ zstyle ':vcs_info:git:*' formats '(git)-[%b]-'
 add-zsh-hook precmd vcs_info
 setopt prompt_subst
 
-# custom platform display: [amd64/freebsd-14.4]
-local _p_plat="%F{240}[%F{cyan}${MACHTYPE}/freebsd%F{240}]"
+# custom platform display: [amd64/Linux] or [amd64/Darwin] etc.
+local _p_plat="%F{240}[%F{cyan}${MACHTYPE}/$(uname -s)%F{240}]"
 PROMPT="${_p_plat} %F{240}[%F{green}%l%F{240}] [%F{green}%n@%m%F{white}:%F{yellow}%~%F{240}]
 %fzsh %B%h%b %(?..[%?] )\${vcs_info_msg_0_}%B%#%b "
 
